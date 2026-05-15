@@ -19,6 +19,7 @@
   },
   "env": {
     "TURSO_DATABASE_URL": "libsql://reviactyl-andri.aws-ap-south-1.turso.io",
+    "TURSO_AUTH_TOKEN": "eyJhbGciOiJFZERTQSIsInR5cCI6IkpXVCJ9", 
     "ADMIN_USERNAME": "andriyt",
     "ADMIN_PASSWORD": "andri2002"
   }
