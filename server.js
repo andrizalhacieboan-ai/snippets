@@ -13,7 +13,6 @@ const adminUsername = process.env.ADMIN_USERNAME;
 const adminPassword = process.env.ADMIN_PASSWORD;
 const tursoUrl = process.env.TURSO_DATABASE_URL;
 const tursoAuthToken = process.env.TURSO_AUTH_TOKEN;
-const sessions = new Map();
 
 const mimeTypes = {
   '.html': 'text/html; charset=utf-8',
@@ -162,6 +161,13 @@ async function initDb() {
       created_at TEXT DEFAULT CURRENT_TIMESTAMP,
       FOREIGN KEY (user_id) REFERENCES users(id)
     );
+    CREATE TABLE IF NOT EXISTS sessions (
+      token TEXT PRIMARY KEY,
+      role TEXT NOT NULL,
+      user_id INTEGER,
+      username TEXT NOT NULL,
+      created_at INTEGER DEFAULT (strftime('%s', 'now'))
+    );
   `);
 }
 
@@ -185,23 +191,31 @@ function parseCookies(req) {
 }
 
 function setSessionCookie(res, token) {
-  res.setHeader('Set-Cookie', `reviactyl_session=${encodeURIComponent(token)}; HttpOnly; SameSite=Lax; Path=/; Max-Age=604800`);
+  // Max-Age 1 tahun (31536000 detik) agar permanen
+  res.setHeader('Set-Cookie', `reviactyl_session=${encodeURIComponent(token)}; HttpOnly; SameSite=Lax; Path=/; Max-Age=31536000`);
 }
 
 function clearSessionCookie(res) {
   res.setHeader('Set-Cookie', 'reviactyl_session=; HttpOnly; SameSite=Lax; Path=/; Max-Age=0');
 }
 
-function createSession(payload) {
+async function createSession(payload) {
   const token = crypto.randomBytes(32).toString('hex');
-  sessions.set(token, { ...payload, createdAt: Date.now() });
+  await run('INSERT INTO sessions (token, role, user_id, username) VALUES (?, ?, ?, ?)', [
+    token, 
+    payload.role, 
+    payload.userId || null, 
+    payload.username
+  ]);
   return token;
 }
 
-function currentSession(req) {
+async function getSession(req) {
   const token = parseCookies(req).reviactyl_session;
-  const session = token ? sessions.get(token) : null;
-  return session ? { token, ...session } : null;
+  if (!token) return null;
+  const session = await row('SELECT * FROM sessions WHERE token = ?', [token]);
+  if (!session) return null;
+  return { token: session.token, role: session.role, userId: session.user_id, username: session.username };
 }
 
 function hashPassword(password) {
@@ -285,11 +299,14 @@ function serveStatic(req, res) {
 async function handleApi(req, res) {
   const url = new URL(req.url, `http://${req.headers.host}`);
   const pathname = url.pathname;
-  const session = currentSession(req);
+  const session = await getSession(req);
 
-  // Session
+  // Session check
   if (req.method === 'GET' && pathname === '/api/session') {
-    return sendJson(res, 200, session ? { loggedIn: true, role: session.role, username: session.username } : { loggedIn: false });
+    if (session) {
+      return sendJson(res, 200, { loggedIn: true, role: session.role, username: session.username });
+    }
+    return sendJson(res, 200, { loggedIn: false });
   }
 
   // Register
@@ -302,7 +319,7 @@ async function handleApi(req, res) {
     if (!/^[a-zA-Z0-9_]{3,32}$/.test(username)) return sendJson(res, 400, { message: 'Username hanya boleh huruf, angka, underscore (3-32 karakter).' });
     try {
       const result = await run('INSERT INTO users (username, password_hash) VALUES (?, ?)', [username, hashPassword(body.password)]);
-      const token = createSession({ role: 'user', userId: Number(result.lastInsertRowid), username });
+      const token = await createSession({ role: 'user', userId: Number(result.lastInsertRowid), username });
       setSessionCookie(res, token);
       return sendJson(res, 201, { message: 'Registrasi berhasil.', username });
     } catch (error) {
@@ -315,7 +332,7 @@ async function handleApi(req, res) {
     const body = await readJson(req);
     const user = await row('SELECT * FROM users WHERE username = ?', [String(body.username || '').trim()]);
     if (!user || !verifyPassword(String(body.password || ''), user.password_hash)) return sendJson(res, 401, { message: 'Username atau password salah.' });
-    const token = createSession({ role: 'user', userId: Number(user.id), username: user.username });
+    const token = await createSession({ role: 'user', userId: Number(user.id), username: user.username });
     setSessionCookie(res, token);
     return sendJson(res, 200, { message: 'Login berhasil.', username: user.username });
   }
@@ -324,14 +341,14 @@ async function handleApi(req, res) {
   if (req.method === 'POST' && pathname === '/api/admin/login') {
     const body = await readJson(req);
     if (body.username !== adminUsername || body.password !== adminPassword) return sendJson(res, 401, { message: 'Username atau password admin salah.' });
-    const token = createSession({ role: 'admin', username: adminUsername });
+    const token = await createSession({ role: 'admin', username: adminUsername });
     setSessionCookie(res, token);
     return sendJson(res, 200, { message: 'Login admin berhasil.', username: adminUsername });
   }
 
   // Logout
   if (req.method === 'POST' && pathname === '/api/logout') {
-    if (session) sessions.delete(session.token);
+    if (session) await run('DELETE FROM sessions WHERE token = ?', [session.token]);
     clearSessionCookie(res);
     return sendJson(res, 200, { message: 'Logout berhasil.' });
   }
