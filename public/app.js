@@ -1,19 +1,25 @@
-const authStatus = document.querySelector('#authStatus');
-const userForm = document.querySelector('#userForm');
-const registerBtn = document.querySelector('#registerBtn');
-const snippetForm = document.querySelector('#snippetForm');
-const snippetList = document.querySelector('#snippetList');
-const adminForm = document.querySelector('#adminForm');
-const adminDashboard = document.querySelector('#adminDashboard');
-const toast = document.querySelector('#toast');
+// ═══════════════════════════════════════════
+// AndriCode — Shared Utilities (public/app.js)
+// ═══════════════════════════════════════════
 
-function showToast(message) {
-  toast.textContent = message;
-  toast.classList.add('show');
-  window.setTimeout(() => toast.classList.remove('show'), 3000);
+const toastEl = document.querySelector('#toast');
+let toastTimer;
+
+/**
+ * Tampilkan toast notification singkat di bagian bawah layar
+ */
+export function showToast(message) {
+  if (!toastEl) return;
+  clearTimeout(toastTimer);
+  toastEl.textContent = message;
+  toastEl.classList.add('show');
+  toastTimer = setTimeout(() => toastEl.classList.remove('show'), 3000);
 }
 
-async function api(path, options = {}) {
+/**
+ * Fetch wrapper ke API backend dengan error handling
+ */
+export async function api(path, options = {}) {
   const response = await fetch(path, {
     headers: { 'Content-Type': 'application/json', ...(options.headers || {}) },
     ...options,
@@ -23,28 +29,126 @@ async function api(path, options = {}) {
   return data;
 }
 
-function formData(form) {
+/**
+ * Escape karakter HTML untuk mencegah XSS
+ */
+export function escapeHtml(value) {
+  return String(value).replace(/[&<>"]/g, (c) => ({
+    '&': '&amp;',
+    '<': '&lt;',
+    '>': '&gt;',
+    '"': '&quot;',
+  }[c]));
+}
+
+/**
+ * Ambil data dari form sebagai plain object
+ */
+export function formData(form) {
   return Object.fromEntries(new FormData(form).entries());
 }
 
-function escapeHtml(value) {
-  return String(value).replace(/[&<>"]/g, (char) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[char]));
+// ── Topbar Auth Status ──
+
+/**
+ * Render status auth di topbar (avatar + nama + logout / link login)
+ */
+export async function initTopbar() {
+  const container = document.querySelector('#topbarAuth');
+  if (!container) return;
+
+  try {
+    const session = await api('/api/session');
+
+    if (session.loggedIn) {
+      const initial = session.username.charAt(0).toUpperCase();
+      const profileHref = session.role === 'admin' ? '/dashboard' : '/profile';
+      const profileTitle = session.role === 'admin' ? 'Admin Dashboard' : 'Profil';
+
+      container.innerHTML = `
+        <div class="auth-user">
+          <a href="${profileHref}" class="auth-avatar" title="${profileTitle}">${initial}</a>
+          <span class="auth-name">${escapeHtml(session.username)}</span>
+          <button class="btn-logout" id="logoutBtn">Logout</button>
+        </div>`;
+
+      const logoutBtn = document.querySelector('#logoutBtn');
+      if (logoutBtn) {
+        logoutBtn.addEventListener('click', async () => {
+          try {
+            await api('/api/logout', { method: 'POST', body: '{}' });
+            showToast('Logout berhasil.');
+            setTimeout(() => window.location.reload(), 500);
+          } catch {
+            showToast('Gagal logout.');
+          }
+        });
+      }
+    } else {
+      container.innerHTML = `<a href="/login" class="auth-link">Login</a>`;
+    }
+
+    return session;
+  } catch (error) {
+    container.innerHTML = `<a href="/login" class="auth-link">Login</a>`;
+    return { loggedIn: false };
+  }
 }
 
-async function refreshSession() {
-  const session = await api('/api/session');
-  authStatus.innerHTML = session.loggedIn
-    ? `Login sebagai <strong>${escapeHtml(session.username)}</strong> (${session.role}) <button class="btn ghost" id="logoutBtn">Logout</button>`
-    : 'Belum login';
-  document.querySelector('#logoutBtn')?.addEventListener('click', async () => {
-    await api('/api/logout', { method: 'POST', body: '{}' });
-    adminDashboard.classList.add('hidden');
-    showToast('Logout berhasil.');
-    refreshSession();
-  });
+// ── Auth Gate ──
+
+/**
+ * Cek apakah user sudah login dengan role yang sesuai.
+ * Tampilkan auth gate jika belum, tampilkan konten jika sudah.
+ */
+export async function requireAuth(role = 'user') {
+  const gate = document.querySelector('#authGate');
+  const content = document.querySelector('#protectedContent');
+
+  try {
+    const session = await api('/api/session');
+
+    // Belum login sama sekali
+    if (!session.loggedIn) {
+      if (gate) gate.classList.remove('hidden');
+      if (content) content.classList.add('hidden');
+      return null;
+    }
+
+    // Login sebagai user biasa, tapi halaman butuh admin
+    if (role === 'admin' && session.role !== 'admin') {
+      if (gate) gate.classList.remove('hidden');
+      if (content) content.classList.add('hidden');
+
+      // Ubah pesan gate untuk akses ditolak
+      if (gate) {
+        gate.innerHTML = `
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+          <h2>Akses Ditolak</h2>
+          <p>Halaman ini hanya untuk admin. Kamu login sebagai user biasa.</p>
+          <a class="btn primary" href="/">Kembali ke Home</a>`;
+      }
+      return null;
+    }
+
+    // Auth valid
+    if (gate) gate.classList.add('hidden');
+    if (content) content.classList.remove('hidden');
+    return session;
+
+  } catch (error) {
+    if (gate) gate.classList.remove('hidden');
+    if (content) content.classList.add('hidden');
+    return null;
+  }
 }
 
-function snippetCard(snippet) {
+// ── Snippet Rendering ──
+
+/**
+ * Render HTML kartu snippet publik (untuk halaman home)
+ */
+export function snippetCardHtml(snippet) {
   return `
     <article class="snippet-card" data-id="${snippet.id}">
       <div>
@@ -57,114 +161,115 @@ function snippetCard(snippet) {
       </div>
       <pre class="snippet-code"><code>Memuat kode...</code></pre>
       <div class="card-actions">
-        <span class="stats">👁️ ${snippet.views} view • 📋 <span class="copy-count">${snippet.copies}</span> salin</span>
-        <button class="btn primary copy-btn">Salin</button>
+        <span class="stats">👁️ <span class="view-count">${snippet.views}</span> • 📋 <span class="copy-count">${snippet.copies}</span> salin</span>
+        <button class="btn primary sm copy-btn">Salin</button>
       </div>
-    </article>
-  `;
+    </article>`;
 }
 
-async function loadSnippets() {
-  const snippets = await api('/api/snippets');
-  snippetList.innerHTML = snippets.length ? snippets.map(snippetCard).join('') : '<p class="muted">Belum ada snippet. Jadilah uploader pertama.</p>';
+/**
+ * Pasang interaksi (load detail & copy) ke semua snippet cards di container
+ */
+export async function wireSnippetCards(container) {
+  const cards = container.querySelectorAll('.snippet-card');
+  const loadQueue = [];
 
-  for (const card of snippetList.querySelectorAll('.snippet-card')) {
+  for (const card of cards) {
     const id = card.dataset.id;
+    loadQueue.push(loadSnippetDetail(card, id));
+  }
+
+  await Promise.allSettled(loadQueue);
+}
+
+async function loadSnippetDetail(card, id) {
+  try {
     const detail = await api(`/api/snippets/${id}`);
-    card.querySelector('code').textContent = detail.code;
-    card.querySelector('.stats').firstChild.textContent = `👁️ ${detail.views} view • 📋 `;
-    card.querySelector('.copy-btn').addEventListener('click', async () => {
-      await navigator.clipboard.writeText(detail.code);
-      const copyResult = await api(`/api/snippets/${id}/copy`, { method: 'POST', body: '{}' });
-      card.querySelector('.copy-count').textContent = copyResult.copies;
-      showToast('Kode berhasil disalin.');
-    });
+    
+    const codeEl = card.querySelector('code');
+    if (codeEl) codeEl.textContent = detail.code;
+
+    const viewCount = card.querySelector('.view-count');
+    if (viewCount) viewCount.textContent = detail.views;
+
+    // Pasang event listener tombol salin
+    const copyBtn = card.querySelector('.copy-btn');
+    if (copyBtn) {
+      copyBtn.addEventListener('click', async () => {
+        try {
+          await navigator.clipboard.writeText(detail.code);
+        } catch {
+          // Fallback jika Clipboard API gagal (misal: tidak HTTPS)
+          const textArea = document.createElement('textarea');
+          textArea.value = detail.code;
+          textArea.style.position = 'fixed';
+          textArea.style.left = '-9999px';
+          document.body.appendChild(textArea);
+          textArea.select();
+          document.execCommand('copy');
+          document.body.removeChild(textArea);
+        }
+        
+        try {
+          const copyResult = await api(`/api/snippets/${id}/copy`, { method: 'POST', body: '{}' });
+          const copyCount = card.querySelector('.copy-count');
+          if (copyCount) copyCount.textContent = copyResult.copies;
+          showToast('Kode berhasil disalin.');
+        } catch {
+          showToast('Gagal mencatat salinan, tapi kode sudah disalin.');
+        }
+      });
+    }
+  } catch {
+    const codeEl = card.querySelector('code');
+    if (codeEl) codeEl.textContent = 'Gagal memuat kode.';
   }
 }
 
-userForm.addEventListener('submit', async (event) => {
-  event.preventDefault();
-  try {
-    const data = await api('/api/login', { method: 'POST', body: JSON.stringify(formData(userForm)) });
-    showToast(data.message);
-    userForm.reset();
-    refreshSession();
-  } catch (error) {
-    showToast(error.message);
-  }
-});
+// ── UI Helpers ──
 
-registerBtn.addEventListener('click', async () => {
-  try {
-    const data = await api('/api/register', { method: 'POST', body: JSON.stringify(formData(userForm)) });
-    showToast(data.message);
-    userForm.reset();
-    refreshSession();
-  } catch (error) {
-    showToast(error.message);
-  }
-});
-
-snippetForm.addEventListener('submit', async (event) => {
-  event.preventDefault();
-  try {
-    const data = await api('/api/snippets', { method: 'POST', body: JSON.stringify(formData(snippetForm)) });
-    showToast(data.message);
-    snippetForm.reset();
-    loadSnippets();
-  } catch (error) {
-    showToast(error.message);
-  }
-});
-
-function renderAdmin(data) {
-  adminDashboard.classList.remove('hidden');
-  adminDashboard.innerHTML = `
-    <div class="stats-grid">
-      <div class="stat-box"><span>User</span><strong>${data.totals.users}</strong></div>
-      <div class="stat-box"><span>Snippet</span><strong>${data.totals.snippets}</strong></div>
-      <div class="stat-box"><span>View</span><strong>${data.totals.views}</strong></div>
-      <div class="stat-box"><span>Salin</span><strong>${data.totals.copies}</strong></div>
-    </div>
-    <div class="admin-list">
-      ${data.snippets.map((snippet) => `
-        <div class="admin-row">
-          <div>
-            <strong>${escapeHtml(snippet.title)}</strong>
-            <p class="muted">${escapeHtml(snippet.language)} • ${escapeHtml(snippet.username)} • 👁️ ${snippet.views} • 📋 ${snippet.copies}</p>
-          </div>
-          <button class="btn danger" data-delete="${snippet.id}">Hapus</button>
-        </div>
-      `).join('') || '<p class="muted">Belum ada snippet untuk dimoderasi.</p>'}
-    </div>
-  `;
-  adminDashboard.querySelectorAll('[data-delete]').forEach((button) => {
-    button.addEventListener('click', async () => {
-      await api(`/api/admin/snippets/${button.dataset.delete}`, { method: 'DELETE' });
-      showToast('Snippet dihapus.');
-      loadAdmin();
-      loadSnippets();
-    });
-  });
+/**
+ * Tampilkan skeleton placeholder saat loading data
+ */
+export function showSkeleton(container, count = 3) {
+  if (!container) return;
+  container.innerHTML = Array.from(
+    { length: count },
+    () => '<div class="skeleton skeleton-card"></div>'
+  ).join('');
 }
 
-async function loadAdmin() {
-  const data = await api('/api/admin/stats');
-  renderAdmin(data);
+/**
+ * Tampilkan empty state saat tidak ada data
+ */
+export function showEmpty(container, message, linkHref, linkText) {
+  if (!container) return;
+  let linkHtml = '';
+  if (linkHref && linkText) {
+    linkHtml = ` <a href="${linkHref}" style="color:var(--primary-2);font-weight:700">${linkText}</a>`;
+  }
+  container.innerHTML = `
+    <div class="empty-state">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+        <polyline points="14 2 14 8 20 8"/>
+      </svg>
+      <p>${message}${linkHtml}</p>
+    </div>`;
 }
 
-adminForm.addEventListener('submit', async (event) => {
-  event.preventDefault();
-  try {
-    const data = await api('/api/admin/login', { method: 'POST', body: JSON.stringify(formData(adminForm)) });
-    showToast(data.message);
-    adminForm.reset();
-    await refreshSession();
-    await loadAdmin();
-  } catch (error) {
-    showToast(error.message);
-  }
-});
-
-refreshSession();
-loadSnippets();
+/**
+ * Tampilkan error state saat gagal fetch
+ */
+export function showError(container, message = 'Gagal memuat data.') {
+  if (!container) return;
+  container.innerHTML = `
+    <div class="empty-state">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+        <circle cx="12" cy="12" r="10"/>
+        <line x1="15" y1="9" x2="9" y2="15"/>
+        <line x1="9" y1="9" x2="15" y2="15"/>
+      </svg>
+      <p>${message}</p>
+    </div>`;
+}
