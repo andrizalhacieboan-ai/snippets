@@ -191,7 +191,6 @@ function parseCookies(req) {
 }
 
 function setSessionCookie(res, token) {
-  // Max-Age 1 tahun (31536000 detik) agar permanen
   res.setHeader('Set-Cookie', `reviactyl_session=${encodeURIComponent(token)}; HttpOnly; SameSite=Lax; Path=/; Max-Age=31536000`);
 }
 
@@ -272,7 +271,6 @@ function serveStatic(req, res) {
   const url = new URL(req.url, `http://${req.headers.host}`);
   let requestedPath = url.pathname === '/' ? '/index.html' : decodeURIComponent(url.pathname);
 
-  // Clean URL support: /login → /login.html
   if (cleanUrlMap[requestedPath]) requestedPath = cleanUrlMap[requestedPath];
 
   const filePath = path.normalize(path.join(publicDir, requestedPath));
@@ -301,7 +299,6 @@ async function handleApi(req, res) {
   const pathname = url.pathname;
   const session = await getSession(req);
 
-  // Session check
   if (req.method === 'GET' && pathname === '/api/session') {
     if (session) {
       return sendJson(res, 200, { loggedIn: true, role: session.role, username: session.username });
@@ -309,7 +306,6 @@ async function handleApi(req, res) {
     return sendJson(res, 200, { loggedIn: false });
   }
 
-  // Register
   if (req.method === 'POST' && pathname === '/api/register') {
     const body = await readJson(req);
     const username = String(body.username || '').trim();
@@ -327,7 +323,6 @@ async function handleApi(req, res) {
     }
   }
 
-  // User login
   if (req.method === 'POST' && pathname === '/api/login') {
     const body = await readJson(req);
     const user = await row('SELECT * FROM users WHERE username = ?', [String(body.username || '').trim()]);
@@ -337,7 +332,6 @@ async function handleApi(req, res) {
     return sendJson(res, 200, { message: 'Login berhasil.', username: user.username });
   }
 
-  // Admin login
   if (req.method === 'POST' && pathname === '/api/admin/login') {
     const body = await readJson(req);
     if (body.username !== adminUsername || body.password !== adminPassword) return sendJson(res, 401, { message: 'Username atau password admin salah.' });
@@ -346,14 +340,12 @@ async function handleApi(req, res) {
     return sendJson(res, 200, { message: 'Login admin berhasil.', username: adminUsername });
   }
 
-  // Logout
   if (req.method === 'POST' && pathname === '/api/logout') {
     if (session) await run('DELETE FROM sessions WHERE token = ?', [session.token]);
     clearSessionCookie(res);
     return sendJson(res, 200, { message: 'Logout berhasil.' });
   }
 
-  // List public snippets
   if (req.method === 'GET' && pathname === '/api/snippets') {
     const snippets = await rows(`
       SELECT snippets.id, snippets.title, snippets.description, snippets.language,
@@ -364,7 +356,6 @@ async function handleApi(req, res) {
     return sendJson(res, 200, snippets);
   }
 
-  // Snippet detail
   const detailMatch = pathname.match(/^\/api\/snippets\/(\d+)$/);
   if (req.method === 'GET' && detailMatch) {
     const id = Number(detailMatch[1]);
@@ -376,7 +367,21 @@ async function handleApi(req, res) {
     return sendJson(res, 200, snippet);
   }
 
-  // Create snippet
+  // Raw Code API
+  const rawMatch = pathname.match(/^\/api\/raw\/(\d+)$/);
+  if (req.method === 'GET' && rawMatch) {
+    const id = Number(rawMatch[1]);
+    const snippet = await row('SELECT code, title FROM snippets WHERE id = ?', [id]);
+    if (!snippet) {
+      res.writeHead(404, { 'Content-Type': 'text/plain; charset=utf-8' });
+      res.end('Snippet tidak ditemukan.');
+      return;
+    }
+    res.writeHead(200, { 'Content-Type': 'text/plain; charset=utf-8' });
+    res.end(snippet.code);
+    return;
+  }
+
   if (req.method === 'POST' && pathname === '/api/snippets') {
     if (!session || session.role !== 'user') return sendJson(res, 401, { message: 'Silakan login user terlebih dahulu.' });
     const body = await readJson(req);
@@ -394,7 +399,6 @@ async function handleApi(req, res) {
     return sendJson(res, 201, { message: 'Snippet berhasil diupload.', id: Number(result.lastInsertRowid) });
   }
 
-  // Copy snippet
   const copyMatch = pathname.match(/^\/api\/snippets\/(\d+)\/copy$/);
   if (req.method === 'POST' && copyMatch) {
     const id = Number(copyMatch[1]);
@@ -403,8 +407,6 @@ async function handleApi(req, res) {
     if (!snippet) return sendJson(res, 404, { message: 'Snippet tidak ditemukan.' });
     return sendJson(res, 200, { copies: Number(snippet.copies) });
   }
-
-  // ── User profile endpoints ──
 
   if (req.method === 'GET' && pathname === '/api/user/profile') {
     if (!session || session.role !== 'user') return sendJson(res, 401, { message: 'Silakan login terlebih dahulu.' });
@@ -429,8 +431,6 @@ async function handleApi(req, res) {
     await run('DELETE FROM snippets WHERE id = ?', [snippetId]);
     return sendJson(res, 200, { message: 'Snippet berhasil dihapus.' });
   }
-
-  // ── Admin endpoints ──
 
   if (req.method === 'GET' && pathname === '/api/admin/stats') {
     if (!session || session.role !== 'admin') return sendJson(res, 401, { message: 'Akses admin ditolak.' });
@@ -459,8 +459,6 @@ async function handleApi(req, res) {
 
   return sendJson(res, 404, { message: 'Endpoint tidak ditemukan.' });
 }
-
-/* ── Init & Start ── */
 
 await initDb();
 
