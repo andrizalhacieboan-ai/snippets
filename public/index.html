@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Snippet Share</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+  <div class="grid-glow"></div>
+  <header class="topbar">
+    <a class="brand" href="#home" aria-label="Reviactyl home">
+      <span class="brand-mark">AC</span>
+      <span>Andri<span class="accent">Code</span></span>
+    </a>
+    <nav class="menu">
+      <a href="#upload">Upload</a>
+      <a href="#snippets">Snippet</a>
+      <a href="#admin">Admin Panel</a>
+    </nav>
+    <div class="auth-status" id="authStatus">Memuat...</div>
+  </header>
+
+  <main>
+    <section class="hero" id="home">
+      <div class="hero-copy">
+        <p class="eyebrow">aNdri Store • Share Code Snippet</p>
+        <h1>Simpan,bagikan,temukan dan pantau performa snippet kode kamu.</h1>
+        <p class="hero-text">Platform untuk berbagi, menemukan, dan menyimpan potongan kode favoritmu. Login, upload, dan bagikan kode dengan mudah.
+</p>
+        <div class="hero-actions">
+          <a class="btn primary" href="#upload">Upload Kode</a>
+          <a class="btn ghost" href="#snippets">Lihat Snippet</a>
+        </div>
+      </div>
+      <div class="hero-card">
+        <div class="terminal-bar"><span></span><span></span><span></span></div>
+        <pre><code>const developer = "ANDRI STOTE";
+const data = {
+  name: "andri",
+  residence: "riau,pekanbaru",
+  hobbies: "coding and experimenting
+            with the latest technology",
+  expertise: "HTML, CSS, JS, React,
+              Vue, Svelte, TS, PHP, 
+              Next.JS, Express"
+              
+const theme = "Reviactyl";
+const stats = {
+  views: "real-time",
+  copies: "tracked",
+  database: "Turso SQLite"
+};</code></pre>
+      </div>
+    </section>
+
+    <section class="panel auth-panel" id="login">
+      <div>
+        <p class="eyebrow">Akun User</p>
+        <h2>Login atau daftar untuk upload kode.</h2>
+      </div>
+      <form id="userForm" class="form-inline">
+        <input name="username" placeholder="Username" autocomplete="username" required>
+        <input name="password" type="password" placeholder="Password" autocomplete="current-password" required>
+        <button class="btn primary" type="submit" data-action="login">Login</button>
+        <button class="btn ghost" type="button" id="registerBtn">Daftar</button>
+      </form>
+    </section>
+
+    <section class="panel" id="upload">
+      <div class="section-heading">
+        <p class="eyebrow">Upload Kode</p>
+        <h2>Tambahkan snippet baru</h2>
+      </div>
+      <form id="snippetForm" class="snippet-form">
+        <div class="two-col">
+          <label>Judul
+            <input name="title" placeholder="Contoh: Fetch API helper" required>
+          </label>
+          <label>Bahasa Pemrograman
+            <input name="language" placeholder="JavaScript, PHP, Python..." required>
+          </label>
+        </div>
+        <label>Deskripsi
+          <textarea name="description" rows="3" placeholder="Jelaskan fungsi snippet ini" required></textarea>
+        </label>
+        <label>Kode
+          <textarea name="code" rows="10" class="code-input" placeholder="Tempel kode di sini" required></textarea>
+        </label>
+        <button class="btn primary" type="submit">Upload Snippet</button>
+      </form>
+    </section>
+
+    <section class="panel" id="snippets">
+      <div class="section-heading">
+        <p class="eyebrow">Library Publik</p>
+        <h2>Snippet terbaru</h2>
+      </div>
+      <div id="snippetList" class="snippet-list"></div>
+    </section>
+
+    <section class="panel admin-panel" id="admin">
+      <div class="section-heading">
+        <p class="eyebrow">Menu Admin Panel</p>
+        <h2>Login admin untuk aksess</h2>
+      </div>
+      <form id="adminForm" class="form-inline">
+        <input name="username" placeholder="Username admin" autocomplete="username" required>
+        <input name="password" type="password" placeholder="Password admin" autocomplete="current-password" required>
+        <button class="btn primary" type="submit">Login Admin</button>
+      </form>
+      <div id="adminDashboard" class="admin-dashboard hidden"></div>
+    </section>
+  </main>
+
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+  <script src="/app.js" type="module"></script>
+</body>
+</html>
