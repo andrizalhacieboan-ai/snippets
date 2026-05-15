@@ -108,19 +108,16 @@ export async function requireAuth(role = 'user') {
   try {
     const session = await api('/api/session');
 
-    // Belum login sama sekali
     if (!session.loggedIn) {
       if (gate) gate.classList.remove('hidden');
       if (content) content.classList.add('hidden');
       return null;
     }
 
-    // Login sebagai user biasa, tapi halaman butuh admin
     if (role === 'admin' && session.role !== 'admin') {
       if (gate) gate.classList.remove('hidden');
       if (content) content.classList.add('hidden');
 
-      // Ubah pesan gate untuk akses ditolak
       if (gate) {
         gate.innerHTML = `
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
@@ -131,7 +128,6 @@ export async function requireAuth(role = 'user') {
       return null;
     }
 
-    // Auth valid
     if (gate) gate.classList.add('hidden');
     if (content) content.classList.remove('hidden');
     return session;
@@ -146,84 +142,26 @@ export async function requireAuth(role = 'user') {
 // ── Snippet Rendering ──
 
 /**
- * Render HTML kartu snippet publik (untuk halaman home)
+ * Render HTML kartu snippet ringkasan (untuk halaman home & profile)
  */
 export function snippetCardHtml(snippet) {
+  const time = new Date(snippet.created_at).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' });
   return `
     <article class="snippet-card" data-id="${snippet.id}">
       <div>
         <div class="snippet-meta">
           <span class="badge">${escapeHtml(snippet.language)}</span>
           <span>oleh ${escapeHtml(snippet.username)}</span>
+          <span>${time}</span>
         </div>
-        <h3>${escapeHtml(snippet.title)}</h3>
+        <h3><a href="/snippet.html?id=${snippet.id}" class="snippet-link">${escapeHtml(snippet.title)}</a></h3>
         <p class="muted">${escapeHtml(snippet.description)}</p>
       </div>
-      <pre class="snippet-code"><code>Memuat kode...</code></pre>
       <div class="card-actions">
-        <span class="stats">👁️ <span class="view-count">${snippet.views}</span> • 📋 <span class="copy-count">${snippet.copies}</span> salin</span>
-        <button class="btn primary sm copy-btn">Salin</button>
+        <span class="stats">👁️ ${snippet.views} • 📋 ${snippet.copies} salin</span>
+        <a href="/snippet.html?id=${snippet.id}" class="btn primary sm">Lihat Kode</a>
       </div>
     </article>`;
-}
-
-/**
- * Pasang interaksi (load detail & copy) ke semua snippet cards di container
- */
-export async function wireSnippetCards(container) {
-  const cards = container.querySelectorAll('.snippet-card');
-  const loadQueue = [];
-
-  for (const card of cards) {
-    const id = card.dataset.id;
-    loadQueue.push(loadSnippetDetail(card, id));
-  }
-
-  await Promise.allSettled(loadQueue);
-}
-
-async function loadSnippetDetail(card, id) {
-  try {
-    const detail = await api(`/api/snippets/${id}`);
-    
-    const codeEl = card.querySelector('code');
-    if (codeEl) codeEl.textContent = detail.code;
-
-    const viewCount = card.querySelector('.view-count');
-    if (viewCount) viewCount.textContent = detail.views;
-
-    // Pasang event listener tombol salin
-    const copyBtn = card.querySelector('.copy-btn');
-    if (copyBtn) {
-      copyBtn.addEventListener('click', async () => {
-        try {
-          await navigator.clipboard.writeText(detail.code);
-        } catch {
-          // Fallback jika Clipboard API gagal (misal: tidak HTTPS)
-          const textArea = document.createElement('textarea');
-          textArea.value = detail.code;
-          textArea.style.position = 'fixed';
-          textArea.style.left = '-9999px';
-          document.body.appendChild(textArea);
-          textArea.select();
-          document.execCommand('copy');
-          document.body.removeChild(textArea);
-        }
-        
-        try {
-          const copyResult = await api(`/api/snippets/${id}/copy`, { method: 'POST', body: '{}' });
-          const copyCount = card.querySelector('.copy-count');
-          if (copyCount) copyCount.textContent = copyResult.copies;
-          showToast('Kode berhasil disalin.');
-        } catch {
-          showToast('Gagal mencatat salinan, tapi kode sudah disalin.');
-        }
-      });
-    }
-  } catch {
-    const codeEl = card.querySelector('code');
-    if (codeEl) codeEl.textContent = 'Gagal memuat kode.';
-  }
 }
 
 // ── UI Helpers ──
