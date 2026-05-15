@@ -2,7 +2,10 @@
 <html lang="id">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, maximum-scale=1, user-scalable=no">
+  <meta name="theme-color" content="#090a1a">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <title>Snippet Share</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -11,20 +14,65 @@
 </head>
 <body>
   <div class="grid-glow"></div>
+
+  <!-- Mobile Nav Overlay -->
+  <div class="nav-overlay" id="navOverlay"></div>
+
+  <!-- Mobile Drawer -->
+  <nav class="mobile-drawer" id="mobileDrawer">
+    <div class="drawer-header">
+      <span class="brand">
+        <span class="brand-mark">AC</span>
+        <span>Andri<span class="accent">Code</span></span>
+      </span>
+      <button class="drawer-close" id="drawerClose" aria-label="Tutup menu">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <div class="drawer-links">
+      <a href="#home" class="drawer-link" data-nav>
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+        Home
+      </a>
+      <a href="#upload" class="drawer-link" data-nav>
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+        Upload
+      </a>
+      <a href="#snippets" class="drawer-link" data-nav>
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
+        Snippet
+      </a>
+      <a href="#admin" class="drawer-link" data-nav>
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+        Admin Panel
+      </a>
+    </div>
+  </nav>
+
   <header class="topbar">
     <a class="brand" href="#home" aria-label="Reviactyl home">
       <span class="brand-mark">AC</span>
       <span>Andri<span class="accent">Code</span></span>
     </a>
-    <nav class="menu">
+
+    <!-- Desktop Nav -->
+    <nav class="menu desktop-only">
       <a href="#upload">Upload</a>
       <a href="#snippets">Snippet</a>
       <a href="#admin">Admin Panel</a>
     </nav>
-    <div class="auth-status" id="authStatus">Memuat...</div>
+
+    <div class="topbar-right">
+      <div class="auth-status" id="authStatus">Memuat...</div>
+      <!-- Hamburger -->
+      <button class="hamburger" id="hamburgerBtn" aria-label="Buka menu">
+        <span></span><span></span><span></span>
+      </button>
+    </div>
   </header>
 
   <main>
+    <!-- Hero -->
     <section class="hero" id="home">
       <div class="hero-copy">
         <p class="eyebrow">Andri Store • Share Code Snippet</p>
@@ -55,19 +103,29 @@ const stats = {
       </div>
     </section>
 
+    <!-- Auth Panel -->
     <section class="panel auth-panel" id="login">
-      <div>
+      <div class="auth-heading">
         <p class="eyebrow">Akun User</p>
         <h2>Login atau daftar untuk upload kode.</h2>
       </div>
-      <form id="userForm" class="form-inline">
-        <input name="username" placeholder="Username" autocomplete="username" required>
-        <input name="password" type="password" placeholder="Password" autocomplete="current-password" required>
-        <button class="btn primary" type="submit" data-action="login">Login</button>
-        <button class="btn ghost" type="button" id="registerBtn">Daftar</button>
+      <form id="userForm" class="auth-form">
+        <div class="form-field">
+          <label for="userUsername">Username</label>
+          <input id="userUsername" name="username" placeholder="Username" autocomplete="username" required>
+        </div>
+        <div class="form-field">
+          <label for="userPassword">Password</label>
+          <input id="userPassword" name="password" type="password" placeholder="Password" autocomplete="current-password" required>
+        </div>
+        <div class="form-actions">
+          <button class="btn primary full-width" type="submit" data-action="login">Login</button>
+          <button class="btn ghost full-width" type="button" id="registerBtn">Daftar</button>
+        </div>
       </form>
     </section>
 
+    <!-- Upload -->
     <section class="panel" id="upload">
       <div class="section-heading">
         <p class="eyebrow">Upload Kode</p>
@@ -75,23 +133,28 @@ const stats = {
       </div>
       <form id="snippetForm" class="snippet-form">
         <div class="two-col">
-          <label>Judul
-            <input name="title" placeholder="Contoh: Fetch API helper" required>
-          </label>
-          <label>Bahasa Pemrograman
-            <input name="language" placeholder="JavaScript, PHP, Python..." required>
-          </label>
+          <div class="form-field">
+            <label for="snipTitle">Judul</label>
+            <input id="snipTitle" name="title" placeholder="Contoh: Fetch API helper" required>
+          </div>
+          <div class="form-field">
+            <label for="snipLang">Bahasa Pemrograman</label>
+            <input id="snipLang" name="language" placeholder="JavaScript, PHP, Python..." required>
+          </div>
         </div>
-        <label>Deskripsi
-          <textarea name="description" rows="3" placeholder="Jelaskan fungsi snippet ini" required></textarea>
-        </label>
-        <label>Kode
-          <textarea name="code" rows="10" class="code-input" placeholder="Tempel kode di sini" required></textarea>
-        </label>
-        <button class="btn primary" type="submit">Upload Snippet</button>
+        <div class="form-field">
+          <label for="snipDesc">Deskripsi</label>
+          <textarea id="snipDesc" name="description" rows="3" placeholder="Jelaskan fungsi snippet ini" required></textarea>
+        </div>
+        <div class="form-field">
+          <label for="snipCode">Kode</label>
+          <textarea id="snipCode" name="code" rows="10" class="code-input" placeholder="Tempel kode di sini" required></textarea>
+        </div>
+        <button class="btn primary full-width" type="submit">Upload Snippet</button>
       </form>
     </section>
 
+    <!-- Snippets -->
     <section class="panel" id="snippets">
       <div class="section-heading">
         <p class="eyebrow">Library Publik</p>
@@ -100,21 +163,61 @@ const stats = {
       <div id="snippetList" class="snippet-list"></div>
     </section>
 
+    <!-- Admin -->
     <section class="panel admin-panel" id="admin">
       <div class="section-heading">
         <p class="eyebrow">Menu Admin Panel</p>
-        <h2>Login admin untuk aksess</h2>
+        <h2>Login admin untuk akses</h2>
       </div>
-      <form id="adminForm" class="form-inline">
-        <input name="username" placeholder="Username admin" autocomplete="username" required>
-        <input name="password" type="password" placeholder="Password admin" autocomplete="current-password" required>
-        <button class="btn primary" type="submit">Login Admin</button>
+      <form id="adminForm" class="auth-form admin-auth-form">
+        <div class="form-field">
+          <label for="adminUser">Username admin</label>
+          <input id="adminUser" name="username" placeholder="Username admin" autocomplete="username" required>
+        </div>
+        <div class="form-field">
+          <label for="adminPass">Password admin</label>
+          <input id="adminPass" name="password" type="password" placeholder="Password admin" autocomplete="current-password" required>
+        </div>
+        <button class="btn primary full-width" type="submit">Login Admin</button>
       </form>
       <div id="adminDashboard" class="admin-dashboard hidden"></div>
     </section>
   </main>
 
+  <!-- Bottom padding for Android gesture nav -->
+  <div class="bottom-spacer"></div>
+
   <div id="toast" class="toast" role="status" aria-live="polite"></div>
+
+  <script>
+    // Mobile drawer logic (inline for immediate availability)
+    const hamburgerBtn = document.getElementById('hamburgerBtn');
+    const mobileDrawer = document.getElementById('mobileDrawer');
+    const navOverlay = document.getElementById('navOverlay');
+    const drawerClose = document.getElementById('drawerClose');
+
+    function openDrawer() {
+      mobileDrawer.classList.add('open');
+      navOverlay.classList.add('show');
+      document.body.style.overflow = 'hidden';
+    }
+    function closeDrawer() {
+      mobileDrawer.classList.remove('open');
+      navOverlay.classList.remove('show');
+      document.body.style.overflow = '';
+    }
+
+    hamburgerBtn.addEventListener('click', openDrawer);
+    drawerClose.addEventListener('click', closeDrawer);
+    navOverlay.addEventListener('click', closeDrawer);
+
+    document.querySelectorAll('[data-nav]').forEach(link => {
+      link.addEventListener('click', () => closeDrawer());
+    });
+
+    // Close drawer on back gesture
+    window.addEventListener('hashchange', closeDrawer);
+  </script>
   <script src="/app.js" type="module"></script>
 </body>
 </html>
