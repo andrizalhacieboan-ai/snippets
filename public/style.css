@@ -575,3 +575,27 @@ pre {
   border-radius: var(--radius-sm);
   background: #050713;
   border:
+}
+
+
+    
+/* Tambahkan di public/style.css */
+
+.admin-list {
+  display: grid;
+  gap: 0.5rem;
+}
+
+.admin-row {
+  display: flex; /* Ganti dari grid ke flex supaya text-overflow bekerja baik */
+  gap: 0.85rem;
+  align-items: center;
+  padding: 1rem;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  background: rgba(255,255,255,0.03);
+  transition: background 0.2s;
+}
+.admin-row:hover {
+  background: rgba(255,255,255,0.05);
+}
