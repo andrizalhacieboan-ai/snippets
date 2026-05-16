@@ -4,9 +4,6 @@ const loginForm = document.querySelector('#loginForm');
 const registerForm = document.querySelector('#registerForm');
 const tabs = document.querySelectorAll('.login-tab');
 
-// Site Key reCAPTCHA Anda
-const RECAPTCHA_SITE_KEY = '6LeAbe0sAAAAANyNb124Qv8eert55r62SxrK1HRN';
-
 // Tab switching
 tabs.forEach((tab) => {
   tab.addEventListener('click', () => {
@@ -23,30 +20,24 @@ tabs.forEach((tab) => {
   });
 });
 
-// Fungsi helper untuk mendapatkan token reCAPTCHA dari Google
-async function getRecaptchaToken(action) {
-  if (!RECAPTCHA_SITE_KEY) {
-    showToast('reCAPTCHA Site Key belum dikonfigurasi!');
+// Fungsi helper untuk mendapatkan token dari Checkbox V2
+function getRecaptchaResponse() {
+  // grecaptcha.getResponse() akan return string token jika dicentang, atau string kosong jika belum
+  const token = grecaptcha.getResponse();
+  if (!token) {
+    showToast('⚠️ Harap centang konfirmasi "Saya bukan robot"');
     return null;
   }
-  try {
-    // Panggil Google API untuk generate token
-    const token = await grecaptcha.execute(RECAPTCHA_SITE_KEY, { action: action });
-    return token;
-  } catch (error) {
-    console.error('reCAPTCHA error:', error);
-    showToast('Gagal memuat verifikasi keamanan.');
-    return null;
-  }
+  return token;
 }
 
 // Login
 loginForm.addEventListener('submit', async (e) => {
   e.preventDefault();
   
-  // Ambil token verifikasi bot
-  const recaptchaToken = await getRecaptchaToken('login');
-  if (!recaptchaToken) return; // Hentikan jika gagal ambil token
+  // Ambil token dari checkbox
+  const recaptchaToken = getRecaptchaResponse();
+  if (!recaptchaToken) return;
 
   try {
     const bodyData = formData(loginForm);
@@ -55,9 +46,11 @@ loginForm.addEventListener('submit', async (e) => {
     const data = await api('/api/login', { method: 'POST', body: JSON.stringify(bodyData) });
     showToast('✅ ' + data.message);
     loginForm.reset();
+    grecaptcha.reset(); // Reset checkbox setelah submit
     setTimeout(() => { window.location.href = '/profile'; }, 600);
   } catch (error) {
     showToast('❌ ' + error.message);
+    grecaptcha.reset(); // Reset juga jika gagal, agar bisa coba lagi
   }
 });
 
@@ -65,9 +58,9 @@ loginForm.addEventListener('submit', async (e) => {
 registerForm.addEventListener('submit', async (e) => {
   e.preventDefault();
   
-  // Ambil token verifikasi bot
-  const recaptchaToken = await getRecaptchaToken('register');
-  if (!recaptchaToken) return; // Hentikan jika gagal ambil token
+  // Ambil token dari checkbox
+  const recaptchaToken = getRecaptchaResponse();
+  if (!recaptchaToken) return;
 
   try {
     const bodyData = formData(registerForm);
@@ -76,9 +69,11 @@ registerForm.addEventListener('submit', async (e) => {
     const data = await api('/api/register', { method: 'POST', body: JSON.stringify(bodyData) });
     showToast('✅ ' + data.message);
     registerForm.reset();
+    grecaptcha.reset(); // Reset checkbox setelah submit
     setTimeout(() => { window.location.href = '/profile'; }, 600);
   } catch (error) {
     showToast('❌ ' + error.message);
+    grecaptcha.reset(); // Reset juga jika gagal
   }
 });
 
