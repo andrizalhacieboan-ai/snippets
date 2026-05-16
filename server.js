@@ -422,6 +422,55 @@ async function handleApi(req, res) {
     return sendJson(res, 200, snippets);
   }
 
+  // ── User profile update & avatar ──
+
+  if (req.method === 'PUT' && pathname === '/api/user/profile') {
+    if (!session || session.role !== 'user') return sendJson(res, 401, { message: 'Silakan login terlebih dahulu.' });
+    const body = await readJson(req);
+    const newUsername = String(body.username || '').trim();
+    
+    if (!newUsername || newUsername.length < 3 || newUsername.length > 32) {
+      return sendJson(res, 400, { message: 'Username harus 3-32 karakter.' });
+    }
+    if (!/^[a-zA-Z0-9_]+$/.test(newUsername)) {
+      return sendJson(res, 400, { message: 'Username hanya boleh huruf, angka, dan underscore.' });
+    }
+
+    try {
+      // Cek apakah username sudah dipakai orang lain
+      const existing = await row('SELECT id FROM users WHERE username = ? AND id != ?', [newUsername, session.userId]);
+      if (existing) return sendJson(res, 409, { message: 'Username sudah digunakan.' });
+
+      await run('UPDATE users SET username = ? WHERE id = ?', [newUsername, session.userId]);
+      
+      // Update session di database agar nama berubah di topbar
+      await run('UPDATE sessions SET username = ? WHERE token = ?', [newUsername, session.token]);
+      
+      return sendJson(res, 200, { message: 'Username berhasil diubah.', username: newUsername });
+    } catch (error) {
+      return sendJson(res, 500, { message: 'Gagal mengubah username.' });
+    }
+  }
+
+  if (req.method === 'POST' && pathname === '/api/user/avatar') {
+    if (!session || session.role !== 'user') return sendJson(res, 401, { message: 'Silakan login terlebih dahulu.' });
+    const body = await readJson(req);
+    const base64Data = body.avatar;
+
+    if (!base64Data || !base64Data.startsWith('data:image')) {
+      return sendJson(res, 400, { message: 'Format gambar tidak valid.' });
+    }
+
+    try {
+      await run('UPDATE users SET avatar_url = ? WHERE id = ?', [base64Data, session.userId]);
+      return sendJson(res, 200, { message: 'Avatar berhasil diubah.' });
+    } catch (error) {
+      return sendJson(res, 500, { message: 'Gagal mengupload avatar.' });
+    }
+  }
+
+    
+
   const userDeleteMatch = pathname.match(/^\/api\/user\/snippets\/(\d+)$/);
   if (req.method === 'DELETE' && userDeleteMatch) {
     if (!session || session.role !== 'user') return sendJson(res, 401, { message: 'Silakan login terlebih dahulu.' });
