@@ -147,8 +147,10 @@ async function initDb() {
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       username TEXT NOT NULL UNIQUE,
       password_hash TEXT NOT NULL,
+      avatar_url TEXT DEFAULT NULL,
       created_at TEXT DEFAULT CURRENT_TIMESTAMP
     );
+
     CREATE TABLE IF NOT EXISTS snippets (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       user_id INTEGER NOT NULL,
@@ -161,6 +163,7 @@ async function initDb() {
       created_at TEXT DEFAULT CURRENT_TIMESTAMP,
       FOREIGN KEY (user_id) REFERENCES users(id)
     );
+
     CREATE TABLE IF NOT EXISTS sessions (
       token TEXT PRIMARY KEY,
       role TEXT NOT NULL,
@@ -169,8 +172,14 @@ async function initDb() {
       created_at INTEGER DEFAULT (strftime('%s', 'now'))
     );
   `);
-}
 
+  // Migrasi Aman: Tambah kolom avatar_url jika belum ada (agar tidak error 500)
+  try {
+    await db.exec(`ALTER TABLE users ADD COLUMN avatar_url TEXT DEFAULT NULL;`);
+  } catch (e) {
+    // Abaikan error jika kolom sudah ada
+  }
+}
 /* ── Helpers ── */
 
 function sendJson(res, statusCode, payload) {
