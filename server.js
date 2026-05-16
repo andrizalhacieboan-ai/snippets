@@ -13,6 +13,7 @@ const adminUsername = process.env.ADMIN_USERNAME;
 const adminPassword = process.env.ADMIN_PASSWORD;
 const tursoUrl = process.env.TURSO_DATABASE_URL;
 const tursoAuthToken = process.env.TURSO_AUTH_TOKEN;
+const recaptchaSecretKey = process.env.RECAPTCHA_SECRET_KEY; // Tambahkan Env reCAPTCHA
 
 const mimeTypes = {
   '.html': 'text/html; charset=utf-8',
@@ -134,7 +135,7 @@ async function rows(sql, args = []) { return (await db.execute(sql, args)).rows;
 async function row(sql, args = []) { return (await db.execute(sql, args)).rows[0]; }
 async function run(sql, args = []) { return db.execute(sql, args); }
 
-const cleanUrlMap = { '/login': '/login.html', '/upload': '/upload.html', '/profile': '/profile.html', '/dashboard': '/dashboard.html', '/snippet.html': '/snippet.html' };
+const cleanUrlMap = { '/login': '/login.html', '/upload': '/upload.html', '/profile': '/profile.html', '/dashboard': '/dashboard.html' };
 function serveStatic(req, res) {
   const url = new URL(req.url, `http://${req.headers.host}`);
   let requestedPath = url.pathname === '/' ? '/index.html' : decodeURIComponent(url.pathname);
@@ -148,14 +149,50 @@ function serveStatic(req, res) {
   });
 }
 
+// ── reCAPTCHA Verification Helper ──
+async function verifyRecaptcha(token) {
+  if (!recaptchaSecretKey) return true; // Lewati jika RECAPTCHA_SECRET_KEY tidak diset di env (untuk testing)
+  if (!token) return false;
+  try {
+    const verifyUrl = `https://www.google.com/recaptcha/api/siteverify?secret=${recaptchaSecretKey}&response=${token}`;
+    const response = await fetch(verifyUrl, { method: 'POST' });
+    const data = await response.json();
+    return data.success && data.score >= 0.5; // Skor 0.5 adalah batas aman manusia vs bot
+  } catch (error) {
+    console.error('reCAPTCHA verification error:', error);
+    return false;
+  }
+}
+
 async function handleApi(req, res) {
   const url = new URL(req.url, `http://${req.headers.host}`);
   const pathname = url.pathname;
   const session = await getSession(req);
 
   if (req.method === 'GET' && pathname === '/api/session') return sendJson(res, 200, session ? { loggedIn: true, role: session.role, username: session.username } : { loggedIn: false });
-  if (req.method === 'POST' && pathname === '/api/register') { const body = await readJson(req); const username = String(body.username || '').trim(); const usernameError = validateText(username, 'Username', 32); const passwordError = validateText(body.password, 'Password', 100); if (usernameError || passwordError) return sendJson(res, 400, { message: usernameError || passwordError }); if (!/^[a-zA-Z0-9_]{3,32}$/.test(username)) return sendJson(res, 400, { message: 'Username hanya boleh huruf, angka, underscore (3-32 karakter).' }); try { const result = await run('INSERT INTO users (username, password_hash) VALUES (?, ?)', [username, hashPassword(body.password)]); const token = await createSession({ role: 'user', userId: Number(result.lastInsertRowid), username }); setSessionCookie(res, token); return sendJson(res, 201, { message: 'Registrasi berhasil.', username }); } catch (error) { return sendJson(res, 409, { message: 'Username sudah digunakan.' }); } }
-  if (req.method === 'POST' && pathname === '/api/login') { const body = await readJson(req); const user = await row('SELECT * FROM users WHERE username = ?', [String(body.username || '').trim()]); if (!user || !verifyPassword(String(body.password || ''), user.password_hash)) return sendJson(res, 401, { message: 'Username atau password salah.' }); const token = await createSession({ role: 'user', userId: Number(user.id), username: user.username }); setSessionCookie(res, token); return sendJson(res, 200, { message: 'Login berhasil.', username: user.username }); }
+  
+  // ── Register with reCAPTCHA ──
+  if (req.method === 'POST' && pathname === '/api/register') { 
+    const body = await readJson(req); 
+    
+    // Cek Bot
+    if (!(await verifyRecaptcha(body.recaptchaToken))) {
+      return sendJson(res, 403, { message: 'Verifikasi keamanan gagal. Anda terdeteksi sebagai bot.' });
+    }
+
+    const username = String(body.username || '').trim(); const usernameError = validateText(username, 'Username', 32); const passwordError = validateText(body.password, 'Password', 100); if (usernameError || passwordError) return sendJson(res, 400, { message: usernameError || passwordError }); if (!/^[a-zA-Z0-9_]{3,32}$/.test(username)) return sendJson(res, 400, { message: 'Username hanya boleh huruf, angka, underscore (3-32 karakter).' }); try { const result = await run('INSERT INTO users (username, password_hash) VALUES (?, ?)', [username, hashPassword(body.password)]); const token = await createSession({ role: 'user', userId: Number(result.lastInsertRowid), username }); setSessionCookie(res, token); return sendJson(res, 201, { message: 'Registrasi berhasil.', username }); } catch (error) { return sendJson(res, 409, { message: 'Username sudah digunakan.' }); } }
+
+  // ── Login with reCAPTCHA ──
+  if (req.method === 'POST' && pathname === '/api/login') { 
+    const body = await readJson(req); 
+    
+    // Cek Bot
+    if (!(await verifyRecaptcha(body.recaptchaToken))) {
+      return sendJson(res, 403, { message: 'Verifikasi keamanan gagal. Anda terdeteksi sebagai bot.' });
+    }
+
+    const user = await row('SELECT * FROM users WHERE username = ?', [String(body.username || '').trim()]); if (!user || !verifyPassword(String(body.password || ''), user.password_hash)) return sendJson(res, 401, { message: 'Username atau password salah.' }); const token = await createSession({ role: 'user', userId: Number(user.id), username: user.username }); setSessionCookie(res, token); return sendJson(res, 200, { message: 'Login berhasil.', username: user.username }); }
+
   if (req.method === 'POST' && pathname === '/api/admin/login') { const body = await readJson(req); if (body.username !== adminUsername || body.password !== adminPassword) return sendJson(res, 401, { message: 'Username atau password admin salah.' }); const token = await createSession({ role: 'admin', username: adminUsername }); setSessionCookie(res, token); return sendJson(res, 200, { message: 'Login admin berhasil.', username: adminUsername }); }
   if (req.method === 'POST' && pathname === '/api/logout') { if (session) await run('DELETE FROM sessions WHERE token = ?', [session.token]); clearSessionCookie(res); return sendJson(res, 200, { message: 'Logout berhasil.' }); }
 
@@ -219,4 +256,4 @@ export default requestHandler;
 if (!process.env.VERCEL) {
   const server = http.createServer(requestHandler);
   server.listen(port, () => { console.log(`AndriCode berjalan di http://localhost:${port}`); console.log(`Database mode: ${db.mode} (${db.label})`); });
-    }
+}
