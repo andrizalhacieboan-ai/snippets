@@ -141,7 +141,7 @@ function serveStatic(req, res) {
   const filePath = path.normalize(path.join(publicDir, requestedPath));
   if (!filePath.startsWith(publicDir)) { res.writeHead(403); res.end('Forbidden'); return; }
   fs.readFile(filePath, (error, content) => {
-    if (error) { res.writeHead(404, { 'Content-Type': 'text/html; charset=utf-8' }); res.end('<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>404</title></head><body style="background:#090a1a;color:#f8f7ff;font-family:sans-serif;display:grid;place-items:center;min-height:100vh"><div style="text-align:center"><h1 style="font-size:4rem;margin:0">404</h1><p>Halaman tidak ditemukan.</p><a href="/" style="color:#00f5d4">← Kembali ke Home</a></div></body></html>'); return; }
+    if (error) { res.writeHead(404, { 'Content-Type': 'text/html; charset=utf-8' }); res.end('<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>404</title></head><body style="background:#050507;color:#ededf0;font-family:sans-serif;display:grid;place-items:center;min-height:100vh"><div style="text-align:center"><h1 style="font-size:4rem;margin:0">404</h1><p>Halaman tidak ditemukan.</p><a href="/" style="color:#06b6d4">← Kembali ke Home</a></div></body></html>'); return; }
     res.writeHead(200, { 'Content-Type': mimeTypes[path.extname(filePath)] || 'application/octet-stream' });
     res.end(content);
   });
@@ -177,8 +177,10 @@ async function handleApi(req, res) {
   // ── User Profile Endpoints ──
   if (req.method === 'GET' && pathname === '/api/user/profile') { if (!session || session.role !== 'user') return sendJson(res, 401, { message: 'Silakan login terlebih dahulu.' }); const user = await row('SELECT id, username, avatar_url, created_at FROM users WHERE id = ?', [session.userId]); if (!user) return sendJson(res, 404, { message: 'User tidak ditemukan.' }); const stats = await row('SELECT COUNT(*) as total_snippets, COALESCE(SUM(views),0) as total_views, COALESCE(SUM(copies),0) as total_copies FROM snippets WHERE user_id = ?', [session.userId]); return sendJson(res, 200, { ...user, stats }); }
   if (req.method === 'GET' && pathname === '/api/user/snippets') { if (!session || session.role !== 'user') return sendJson(res, 401, { message: 'Silakan login terlebih dahulu.' }); const snippets = await rows('SELECT id, title, description, language, views, copies, created_at FROM snippets WHERE user_id = ? ORDER BY created_at DESC', [session.userId]); return sendJson(res, 200, snippets); }
-  const userDeleteMatch = pathname.match(/^\/api\/user\/snippets\/(\d+)$/);
-  if (req.method === 'DELETE' && userDeleteMatch) { if (!session || session.role !== 'user') return sendJson(res, 401, { message: 'Silakan login terlebih dahulu.' }); const snippetId = Number(userDeleteMatch[1]); const snippet = await row('SELECT id FROM snippets WHERE id = ? AND user_id = ?', [snippetId, session.userId]); if (!snippet) return sendJson(res, 404, { message: 'Snippet tidak ditemukan atau bukan milik Anda.' }); await run('DELETE FROM snippets WHERE id = ?', [snippetId]); return sendJson(res, 200, { message: 'Snippet berhasil dihapus.' }); }
+  
+  // Fix: Mengganti nama variabel dari userDeleteMatch menjadi userSnippetDeleteMatch
+  const userSnippetDeleteMatch = pathname.match(/^\/api\/user\/snippets\/(\d+)$/);
+  if (req.method === 'DELETE' && userSnippetDeleteMatch) { if (!session || session.role !== 'user') return sendJson(res, 401, { message: 'Silakan login terlebih dahulu.' }); const snippetId = Number(userSnippetDeleteMatch[1]); const snippet = await row('SELECT id FROM snippets WHERE id = ? AND user_id = ?', [snippetId, session.userId]); if (!snippet) return sendJson(res, 404, { message: 'Snippet tidak ditemukan atau bukan milik Anda.' }); await run('DELETE FROM snippets WHERE id = ?', [snippetId]); return sendJson(res, 200, { message: 'Snippet berhasil dihapus.' }); }
 
   // Update Username (POST instead of PUT for broader compatibility)
   if (req.method === 'POST' && pathname === '/api/user/update-username') {
@@ -223,7 +225,7 @@ async function handleApi(req, res) {
     return sendJson(res, 201, { message: 'Komentar ditambahkan.' });
   }
 
-    // ── Admin: Get Users ──
+  // ── Admin: Get Users ──
   if (req.method === 'GET' && pathname === '/api/admin/users') {
     if (!session || session.role !== 'admin') return sendJson(res, 401, { message: 'Akses ditolak.' });
     const users = await rows('SELECT id, username, created_at FROM users');
@@ -231,14 +233,15 @@ async function handleApi(req, res) {
   }
 
   // ── Admin: Delete User ──
-  const userDeleteMatch = pathname.match(/^\/api\/admin\/users\/(\d+)$/);
-  if (req.method === 'DELETE' && userDeleteMatch) {
+  // Fix: Nama variabel diubah ke adminUserDeleteMatch agar tidak konflik
+  const adminUserDeleteMatch = pathname.match(/^\/api\/admin\/users\/(\d+)$/);
+  if (req.method === 'DELETE' && adminUserDeleteMatch) {
     if (!session || session.role !== 'admin') return sendJson(res, 401, { message: 'Akses ditolak.' });
-    const userId = Number(userDeleteMatch[1]);
+    const userId = Number(adminUserDeleteMatch[1]);
     try {
-      await run('DELETE FROM snippets WHERE user_id = ?', [userId]); // Hapus snippet user
-      await run('DELETE FROM sessions WHERE user_id = ?', [userId]); // Hapus session user
-      await run('DELETE FROM users WHERE id = ?', [userId]);         // Hapus user
+      await run('DELETE FROM snippets WHERE user_id = ?', [userId]); 
+      await run('DELETE FROM sessions WHERE user_id = ?', [userId]); 
+      await run('DELETE FROM users WHERE id = ?', [userId]);         
       return sendJson(res, 200, { message: 'User dan snippet terkait berhasil dihapus.' });
     } catch (error) {
       return sendJson(res, 500, { message: 'Gagal menghapus user.' });
@@ -266,7 +269,7 @@ async function handleApi(req, res) {
     }
   }
 
-  // ── Admin Endpoints ──
+  // ── Admin Stats & Delete Snippet ──
   if (req.method === 'GET' && pathname === '/api/admin/stats') { if (!session || session.role !== 'admin') return sendJson(res, 401, { message: 'Akses admin ditolak.' }); const totals = await row(`SELECT (SELECT COUNT(*) FROM users) AS users, (SELECT COUNT(*) FROM snippets) AS snippets, (SELECT COALESCE(SUM(views), 0) FROM snippets) AS views, (SELECT COALESCE(SUM(copies), 0) FROM snippets) AS copies`); const snippets = await rows(`SELECT snippets.id, snippets.title, snippets.language, snippets.views, snippets.copies, snippets.created_at, users.username, users.avatar_url FROM snippets JOIN users ON users.id = snippets.user_id ORDER BY snippets.created_at DESC`); return sendJson(res, 200, { totals, snippets }); }
   const adminDeleteMatch = pathname.match(/^\/api\/admin\/snippets\/(\d+)$/);
   if (req.method === 'DELETE' && adminDeleteMatch) { if (!session || session.role !== 'admin') return sendJson(res, 401, { message: 'Akses admin ditolak.' }); await run('DELETE FROM snippets WHERE id = ?', [Number(adminDeleteMatch[1])]); return sendJson(res, 200, { message: 'Snippet dihapus.' }); }
