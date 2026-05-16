@@ -55,6 +55,45 @@ export function snippetCardHtml(snippet) {
     </article>`;
 }
 
+// ═══════════════════════════════════════════
+// GLOBAL SITE SETTINGS (THEME & FONTS)
+// ═══════════════════════════════════════════
+
+export function applySiteSettings() {
+  const savedTheme = localStorage.getItem('ac-theme') || 'dark';
+  const savedFont = localStorage.getItem('ac-font') || "'Inter', sans-serif";
+  const savedSize = localStorage.getItem('ac-fontSize') || '16';
+
+  // Apply Theme Colors
+  const root = document.documentElement;
+  if (savedTheme === 'ocean') {
+    root.style.setProperty('--bg', '#0b1120'); 
+    root.style.setProperty('--primary', '#3b82f6'); 
+    root.style.setProperty('--primary-2', '#06b6d4');
+  } else if (savedTheme === 'purple') {
+    root.style.setProperty('--bg', '#130a1e'); 
+    root.style.setProperty('--primary', '#d946ef'); 
+    root.style.setProperty('--primary-2', '#a855f7');
+  } else if (savedTheme === 'terminal') {
+    root.style.setProperty('--bg', '#020603'); 
+    root.style.setProperty('--primary', '#22c55e'); 
+    root.style.setProperty('--primary-2', '#4ade80');
+  } else { // dark (default)
+    root.style.setProperty('--bg', '#050507'); 
+    root.style.setProperty('--primary', '#8b5cf6'); 
+    root.style.setProperty('--primary-2', '#06b6d4');
+  }
+
+  // Apply Font Family
+  document.body.style.fontFamily = savedFont;
+
+  // Apply Font Size
+  document.documentElement.style.fontSize = `${savedSize}px`;
+}
+
+// Jalankan secara otomatis saat halaman apapun dimuat
+applySiteSettings();
+
 export function showSkeleton(container, count = 3) { if (!container) return; container.innerHTML = Array.from({ length: count }, () => '<div class="skeleton skeleton-card"></div>').join(''); }
 export function showEmpty(container, message, linkHref, linkText) { if (!container) return; let linkHtml = linkHref && linkText ? ` <a href="${linkHref}" style="color:var(--primary-2);font-weight:700">${linkText}</a>` : ''; container.innerHTML = `<div class="empty-state"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg><p>${message}${linkHtml}</p></div>`; }
 export function showError(container, message = 'Gagal memuat data.') { if (!container) return; container.innerHTML = `<div class="empty-state"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg><p>${message}</p></div>`; }
