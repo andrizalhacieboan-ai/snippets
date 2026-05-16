@@ -112,6 +112,7 @@ async function initDb() {
     CREATE TABLE IF NOT EXISTS snippets (id INTEGER PRIMARY KEY AUTOINCREMENT, user_id INTEGER NOT NULL, title TEXT NOT NULL, description TEXT NOT NULL, language TEXT NOT NULL, code TEXT NOT NULL, views INTEGER DEFAULT 0, copies INTEGER DEFAULT 0, created_at TEXT DEFAULT CURRENT_TIMESTAMP, FOREIGN KEY (user_id) REFERENCES users(id));
     CREATE TABLE IF NOT EXISTS sessions (token TEXT PRIMARY KEY, role TEXT NOT NULL, user_id INTEGER, username TEXT NOT NULL, created_at INTEGER DEFAULT (strftime('%s', 'now')));
     CREATE TABLE IF NOT EXISTS comments (id INTEGER PRIMARY KEY AUTOINCREMENT, snippet_id INTEGER NOT NULL, user_id INTEGER, username TEXT NOT NULL, avatar_url TEXT DEFAULT NULL, content TEXT NOT NULL, created_at TEXT DEFAULT CURRENT_TIMESTAMP, FOREIGN KEY (snippet_id) REFERENCES snippets(id) ON DELETE CASCADE);
+    CREATE TABLE IF NOT EXISTS announcements (id INTEGER PRIMARY KEY AUTOINCREMENT, title TEXT NOT NULL, content TEXT NOT NULL, created_at TEXT DEFAULT CURRENT_TIMESTAMP);
   `);
   try { await db.exec(`ALTER TABLE users ADD COLUMN avatar_url TEXT DEFAULT NULL;`); } catch (e) {}
 }
@@ -133,7 +134,7 @@ async function rows(sql, args = []) { return (await db.execute(sql, args)).rows;
 async function row(sql, args = []) { return (await db.execute(sql, args)).rows[0]; }
 async function run(sql, args = []) { return db.execute(sql, args); }
 
-const cleanUrlMap = { '/login': '/login.html', '/upload': '/upload.html', '/profile': '/profile.html', '/dashboard': '/dashboard.html' };
+const cleanUrlMap = { '/login': '/login.html', '/upload': '/upload.html', '/profile': '/profile.html', '/dashboard': '/dashboard.html', '/snippet.html': '/snippet.html' };
 function serveStatic(req, res) {
   const url = new URL(req.url, `http://${req.headers.host}`);
   let requestedPath = url.pathname === '/' ? '/index.html' : decodeURIComponent(url.pathname);
@@ -177,99 +178,28 @@ async function handleApi(req, res) {
   // ── User Profile Endpoints ──
   if (req.method === 'GET' && pathname === '/api/user/profile') { if (!session || session.role !== 'user') return sendJson(res, 401, { message: 'Silakan login terlebih dahulu.' }); const user = await row('SELECT id, username, avatar_url, created_at FROM users WHERE id = ?', [session.userId]); if (!user) return sendJson(res, 404, { message: 'User tidak ditemukan.' }); const stats = await row('SELECT COUNT(*) as total_snippets, COALESCE(SUM(views),0) as total_views, COALESCE(SUM(copies),0) as total_copies FROM snippets WHERE user_id = ?', [session.userId]); return sendJson(res, 200, { ...user, stats }); }
   if (req.method === 'GET' && pathname === '/api/user/snippets') { if (!session || session.role !== 'user') return sendJson(res, 401, { message: 'Silakan login terlebih dahulu.' }); const snippets = await rows('SELECT id, title, description, language, views, copies, created_at FROM snippets WHERE user_id = ? ORDER BY created_at DESC', [session.userId]); return sendJson(res, 200, snippets); }
-  
-  // Fix: Mengganti nama variabel dari userDeleteMatch menjadi userSnippetDeleteMatch
   const userSnippetDeleteMatch = pathname.match(/^\/api\/user\/snippets\/(\d+)$/);
   if (req.method === 'DELETE' && userSnippetDeleteMatch) { if (!session || session.role !== 'user') return sendJson(res, 401, { message: 'Silakan login terlebih dahulu.' }); const snippetId = Number(userSnippetDeleteMatch[1]); const snippet = await row('SELECT id FROM snippets WHERE id = ? AND user_id = ?', [snippetId, session.userId]); if (!snippet) return sendJson(res, 404, { message: 'Snippet tidak ditemukan atau bukan milik Anda.' }); await run('DELETE FROM snippets WHERE id = ?', [snippetId]); return sendJson(res, 200, { message: 'Snippet berhasil dihapus.' }); }
+  if (req.method === 'POST' && pathname === '/api/user/update-username') { if (!session || session.role !== 'user') return sendJson(res, 401, { message: 'Silakan login.' }); const body = await readJson(req); const newUsername = String(body.username || '').trim(); if (!newUsername || newUsername.length < 3 || newUsername.length > 32) return sendJson(res, 400, { message: 'Username harus 3-32 karakter.' }); if (!/^[a-zA-Z0-9_]+$/.test(newUsername)) return sendJson(res, 400, { message: 'Username hanya boleh huruf, angka, underscore.' }); try { const existing = await row('SELECT id FROM users WHERE username = ? AND id != ?', [newUsername, session.userId]); if (existing) return sendJson(res, 409, { message: 'Username sudah dipakai.' }); await run('UPDATE users SET username = ? WHERE id = ?', [newUsername, session.userId]); await run('UPDATE sessions SET username = ? WHERE token = ?', [newUsername, session.token]); return sendJson(res, 200, { message: 'Username berhasil diubah!', username: newUsername }); } catch (error) { return sendJson(res, 500, { message: 'Gagal mengubah username.' }); } }
+  if (req.method === 'POST' && pathname === '/api/user/avatar') { if (!session || session.role !== 'user') return sendJson(res, 401, { message: 'Silakan login.' }); const body = await readJson(req); if (!body.avatar || !body.avatar.startsWith('data:image')) return sendJson(res, 400, { message: 'Format gambar tidak valid.' }); try { await run('UPDATE users SET avatar_url = ? WHERE id = ?', [body.avatar, session.userId]); return sendJson(res, 200, { message: 'Avatar berhasil diubah!' }); } catch (error) { return sendJson(res, 500, { message: 'Gagal upload avatar.' }); } }
 
-  // Update Username (POST instead of PUT for broader compatibility)
-  if (req.method === 'POST' && pathname === '/api/user/update-username') {
-    if (!session || session.role !== 'user') return sendJson(res, 401, { message: 'Silakan login.' });
-    const body = await readJson(req);
-    const newUsername = String(body.username || '').trim();
-    if (!newUsername || newUsername.length < 3 || newUsername.length > 32) return sendJson(res, 400, { message: 'Username harus 3-32 karakter.' });
-    if (!/^[a-zA-Z0-9_]+$/.test(newUsername)) return sendJson(res, 400, { message: 'Username hanya boleh huruf, angka, underscore.' });
-    try {
-      const existing = await row('SELECT id FROM users WHERE username = ? AND id != ?', [newUsername, session.userId]);
-      if (existing) return sendJson(res, 409, { message: 'Username sudah dipakai.' });
-      await run('UPDATE users SET username = ? WHERE id = ?', [newUsername, session.userId]);
-      await run('UPDATE sessions SET username = ? WHERE token = ?', [newUsername, session.token]);
-      return sendJson(res, 200, { message: 'Username berhasil diubah!', username: newUsername });
-    } catch (error) { return sendJson(res, 500, { message: 'Gagal mengubah username.' }); }
-  }
-
-  if (req.method === 'POST' && pathname === '/api/user/avatar') {
-    if (!session || session.role !== 'user') return sendJson(res, 401, { message: 'Silakan login.' });
-    const body = await readJson(req);
-    if (!body.avatar || !body.avatar.startsWith('data:image')) return sendJson(res, 400, { message: 'Format gambar tidak valid.' });
-    try { await run('UPDATE users SET avatar_url = ? WHERE id = ?', [body.avatar, session.userId]); return sendJson(res, 200, { message: 'Avatar berhasil diubah!' }); } catch (error) { return sendJson(res, 500, { message: 'Gagal upload avatar.' }); }
-  }
-
-  // ── Comments Endpoints (Real-time support) ──
+  // ── Comments Endpoints ──
   const commentsMatch = pathname.match(/^\/api\/snippets\/(\d+)\/comments$/);
-  if (req.method === 'GET' && commentsMatch) {
-    const id = Number(commentsMatch[1]);
-    const comments = await rows('SELECT id, username, avatar_url, content, created_at FROM comments WHERE snippet_id = ? ORDER BY created_at ASC', [id]);
-    return sendJson(res, 200, comments);
-  }
-  if (req.method === 'POST' && commentsMatch) {
-    if (!session) return sendJson(res, 401, { message: 'Login untuk berkomentar.' });
-    const id = Number(commentsMatch[1]);
-    const body = await readJson(req);
-    const content = String(body.content || '').trim();
-    if (!content) return sendJson(res, 400, { message: 'Komentar tidak boleh kosong.' });
-    if (content.length > 500) return sendJson(res, 400, { message: 'Komentar maks 500 karakter.' });
-    
-    const user = await row('SELECT avatar_url FROM users WHERE id = ?', [session.userId]);
-    await run('INSERT INTO comments (snippet_id, user_id, username, avatar_url, content) VALUES (?, ?, ?, ?, ?)', [id, session.userId, session.username, user?.avatar_url || null, content]);
-    return sendJson(res, 201, { message: 'Komentar ditambahkan.' });
-  }
+  if (req.method === 'GET' && commentsMatch) { const id = Number(commentsMatch[1]); const comments = await rows('SELECT id, username, avatar_url, content, created_at FROM comments WHERE snippet_id = ? ORDER BY created_at ASC', [id]); return sendJson(res, 200, comments); }
+  if (req.method === 'POST' && commentsMatch) { if (!session) return sendJson(res, 401, { message: 'Login untuk berkomentar.' }); const id = Number(commentsMatch[1]); const body = await readJson(req); const content = String(body.content || '').trim(); if (!content) return sendJson(res, 400, { message: 'Komentar tidak boleh kosong.' }); if (content.length > 500) return sendJson(res, 400, { message: 'Komentar maks 500 karakter.' }); const user = await row('SELECT avatar_url FROM users WHERE id = ?', [session.userId]); await run('INSERT INTO comments (snippet_id, user_id, username, avatar_url, content) VALUES (?, ?, ?, ?, ?)', [id, session.userId, session.username, user?.avatar_url || null, content]); return sendJson(res, 201, { message: 'Komentar ditambahkan.' }); }
 
-  // ── Admin: Get Users ──
-  if (req.method === 'GET' && pathname === '/api/admin/users') {
-    if (!session || session.role !== 'admin') return sendJson(res, 401, { message: 'Akses ditolak.' });
-    const users = await rows('SELECT id, username, created_at FROM users');
-    return sendJson(res, 200, users);
-  }
+  // ── Announcements Endpoints ──
+  if (req.method === 'GET' && pathname === '/api/announcements') { const announcements = await rows('SELECT * FROM announcements ORDER BY created_at DESC LIMIT 5'); return sendJson(res, 200, announcements); }
+  if (req.method === 'POST' && pathname === '/api/admin/announcements') { if (!session || session.role !== 'admin') return sendJson(res, 401, { message: 'Akses ditolak.' }); const body = await readJson(req); const title = String(body.title || '').trim(); const content = String(body.content || '').trim(); if (!title || !content) return sendJson(res, 400, { message: 'Judul dan isi wajib diisi.' }); await run('INSERT INTO announcements (title, content) VALUES (?, ?)', [title, content]); return sendJson(res, 201, { message: 'Pengumuman berhasil dikirim!' }); }
+  const adminAnnDeleteMatch = pathname.match(/^\/api\/admin\/announcements\/(\d+)$/);
+  if (req.method === 'DELETE' && adminAnnDeleteMatch) { if (!session || session.role !== 'admin') return sendJson(res, 401, { message: 'Akses ditolak.' }); await run('DELETE FROM announcements WHERE id = ?', [Number(adminAnnDeleteMatch[1])]); return sendJson(res, 200, { message: 'Pengumuman dihapus.' }); }
 
-  // ── Admin: Delete User ──
-  // Fix: Nama variabel diubah ke adminUserDeleteMatch agar tidak konflik
+  // ── Admin Endpoints ──
+  if (req.method === 'GET' && pathname === '/api/admin/users') { if (!session || session.role !== 'admin') return sendJson(res, 401, { message: 'Akses ditolak.' }); const users = await rows('SELECT id, username, created_at FROM users'); return sendJson(res, 200, users); }
   const adminUserDeleteMatch = pathname.match(/^\/api\/admin\/users\/(\d+)$/);
-  if (req.method === 'DELETE' && adminUserDeleteMatch) {
-    if (!session || session.role !== 'admin') return sendJson(res, 401, { message: 'Akses ditolak.' });
-    const userId = Number(adminUserDeleteMatch[1]);
-    try {
-      await run('DELETE FROM snippets WHERE user_id = ?', [userId]); 
-      await run('DELETE FROM sessions WHERE user_id = ?', [userId]); 
-      await run('DELETE FROM users WHERE id = ?', [userId]);         
-      return sendJson(res, 200, { message: 'User dan snippet terkait berhasil dihapus.' });
-    } catch (error) {
-      return sendJson(res, 500, { message: 'Gagal menghapus user.' });
-    }
-  }
-
-  // ── Admin: Edit Snippet ──
+  if (req.method === 'DELETE' && adminUserDeleteMatch) { if (!session || session.role !== 'admin') return sendJson(res, 401, { message: 'Akses ditolak.' }); const userId = Number(adminUserDeleteMatch[1]); try { await run('DELETE FROM snippets WHERE user_id = ?', [userId]); await run('DELETE FROM sessions WHERE user_id = ?', [userId]); await run('DELETE FROM users WHERE id = ?', [userId]); return sendJson(res, 200, { message: 'User dan snippet terkait berhasil dihapus.' }); } catch (error) { return sendJson(res, 500, { message: 'Gagal menghapus user.' }); } }
   const adminEditMatch = pathname.match(/^\/api\/admin\/snippets\/(\d+)$/);
-  if (req.method === 'PUT' && adminEditMatch) {
-    if (!session || session.role !== 'admin') return sendJson(res, 401, { message: 'Akses ditolak.' });
-    const id = Number(adminEditMatch[1]);
-    const body = await readJson(req);
-    const title = String(body.title || '').trim();
-    const description = String(body.description || '').trim();
-    const language = String(body.language || '').trim();
-    const code = String(body.code || '').trim();
-    
-    if (!title || !description || !language || !code) return sendJson(res, 400, { message: 'Semua kolom wajib diisi.' });
-    
-    try {
-      await run('UPDATE snippets SET title=?, description=?, language=?, code=? WHERE id=?', [title, description, language, code, id]);
-      return sendJson(res, 200, { message: 'Snippet berhasil diperbarui.' });
-    } catch (error) {
-      return sendJson(res, 500, { message: 'Gagal memperbarui snippet.' });
-    }
-  }
-
-  // ── Admin Stats & Delete Snippet ──
+  if (req.method === 'PUT' && adminEditMatch) { if (!session || session.role !== 'admin') return sendJson(res, 401, { message: 'Akses ditolak.' }); const id = Number(adminEditMatch[1]); const body = await readJson(req); const title = String(body.title || '').trim(); const description = String(body.description || '').trim(); const language = String(body.language || '').trim(); const code = String(body.code || '').trim(); if (!title || !description || !language || !code) return sendJson(res, 400, { message: 'Semua kolom wajib diisi.' }); try { await run('UPDATE snippets SET title=?, description=?, language=?, code=? WHERE id=?', [title, description, language, code, id]); return sendJson(res, 200, { message: 'Snippet berhasil diperbarui.' }); } catch (error) { return sendJson(res, 500, { message: 'Gagal memperbarui snippet.' }); } }
   if (req.method === 'GET' && pathname === '/api/admin/stats') { if (!session || session.role !== 'admin') return sendJson(res, 401, { message: 'Akses admin ditolak.' }); const totals = await row(`SELECT (SELECT COUNT(*) FROM users) AS users, (SELECT COUNT(*) FROM snippets) AS snippets, (SELECT COALESCE(SUM(views), 0) FROM snippets) AS views, (SELECT COALESCE(SUM(copies), 0) FROM snippets) AS copies`); const snippets = await rows(`SELECT snippets.id, snippets.title, snippets.language, snippets.views, snippets.copies, snippets.created_at, users.username, users.avatar_url FROM snippets JOIN users ON users.id = snippets.user_id ORDER BY snippets.created_at DESC`); return sendJson(res, 200, { totals, snippets }); }
   const adminDeleteMatch = pathname.match(/^\/api\/admin\/snippets\/(\d+)$/);
   if (req.method === 'DELETE' && adminDeleteMatch) { if (!session || session.role !== 'admin') return sendJson(res, 401, { message: 'Akses admin ditolak.' }); await run('DELETE FROM snippets WHERE id = ?', [Number(adminDeleteMatch[1])]); return sendJson(res, 200, { message: 'Snippet dihapus.' }); }
@@ -289,4 +219,4 @@ export default requestHandler;
 if (!process.env.VERCEL) {
   const server = http.createServer(requestHandler);
   server.listen(port, () => { console.log(`AndriCode berjalan di http://localhost:${port}`); console.log(`Database mode: ${db.mode} (${db.label})`); });
-}
+    }
