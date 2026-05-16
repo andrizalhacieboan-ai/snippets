@@ -4,7 +4,8 @@ const loginForm = document.querySelector('#loginForm');
 const registerForm = document.querySelector('#registerForm');
 const tabs = document.querySelectorAll('.login-tab');
 
-const RECAPTCHA_SITE_KEY = '6LeAbe0sAAAAANyNb124Qv8eert55r62SxrK1HRN'; // Ganti dengan Site Key Anda
+// Site Key reCAPTCHA Anda
+const RECAPTCHA_SITE_KEY = '6LeAbe0sAAAAANyNb124Qv8eert55r62SxrK1HRN';
 
 // Tab switching
 tabs.forEach((tab) => {
@@ -22,13 +23,14 @@ tabs.forEach((tab) => {
   });
 });
 
-// Fungsi helper untuk mendapatkan token reCAPTCHA
+// Fungsi helper untuk mendapatkan token reCAPTCHA dari Google
 async function getRecaptchaToken(action) {
-  if (!RECAPTCHA_SITE_KEY || RECAPTCHA_SITE_KEY === '6LeAbe0sAAAAANyNb124Qv8eert55r62SxrK1HRN') {
-    showToast('reCAPTCHA Site Key belum dikonfigurasi!', 'error');
+  if (!RECAPTCHA_SITE_KEY) {
+    showToast('reCAPTCHA Site Key belum dikonfigurasi!');
     return null;
   }
   try {
+    // Panggil Google API untuk generate token
     const token = await grecaptcha.execute(RECAPTCHA_SITE_KEY, { action: action });
     return token;
   } catch (error) {
