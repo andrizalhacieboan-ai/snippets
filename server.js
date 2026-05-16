@@ -408,11 +408,15 @@ async function handleApi(req, res) {
     return sendJson(res, 200, { copies: Number(snippet.copies) });
   }
 
-  if (req.method === 'GET' && pathname === '/api/user/profile') {
+    if (req.method === 'GET' && pathname === '/api/user/profile') {
     if (!session || session.role !== 'user') return sendJson(res, 401, { message: 'Silakan login terlebih dahulu.' });
-    const user = await row('SELECT id, username, created_at FROM users WHERE id = ?', [session.userId]);
+    const user = await row('SELECT id, username, avatar_url, created_at FROM users WHERE id = ?', [session.userId]);
     if (!user) return sendJson(res, 404, { message: 'User tidak ditemukan.' });
     const stats = await row('SELECT COUNT(*) as total_snippets, COALESCE(SUM(views),0) as total_views, COALESCE(SUM(copies),0) as total_copies FROM snippets WHERE user_id = ?', [session.userId]);
+    
+    // Format avatar_url, jika null beri default
+    user.avatar_url = user.avatar_url || null;
+    
     return sendJson(res, 200, { ...user, stats });
   }
 
