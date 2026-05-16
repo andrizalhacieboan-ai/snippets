@@ -4,6 +4,8 @@ const loginForm = document.querySelector('#loginForm');
 const registerForm = document.querySelector('#registerForm');
 const tabs = document.querySelectorAll('.login-tab');
 
+const RECAPTCHA_SITE_KEY = '6LeAbe0sAAAAANyNb124Qv8eert55r62SxrK1HRN'; // Ganti dengan Site Key Anda
+
 // Tab switching
 tabs.forEach((tab) => {
   tab.addEventListener('click', () => {
@@ -20,29 +22,61 @@ tabs.forEach((tab) => {
   });
 });
 
+// Fungsi helper untuk mendapatkan token reCAPTCHA
+async function getRecaptchaToken(action) {
+  if (!RECAPTCHA_SITE_KEY || RECAPTCHA_SITE_KEY === '6LeAbe0sAAAAANyNb124Qv8eert55r62SxrK1HRN') {
+    showToast('reCAPTCHA Site Key belum dikonfigurasi!', 'error');
+    return null;
+  }
+  try {
+    const token = await grecaptcha.execute(RECAPTCHA_SITE_KEY, { action: action });
+    return token;
+  } catch (error) {
+    console.error('reCAPTCHA error:', error);
+    showToast('Gagal memuat verifikasi keamanan.');
+    return null;
+  }
+}
+
 // Login
 loginForm.addEventListener('submit', async (e) => {
   e.preventDefault();
+  
+  // Ambil token verifikasi bot
+  const recaptchaToken = await getRecaptchaToken('login');
+  if (!recaptchaToken) return; // Hentikan jika gagal ambil token
+
   try {
-    const data = await api('/api/login', { method: 'POST', body: JSON.stringify(formData(loginForm)) });
-    showToast(data.message);
+    const bodyData = formData(loginForm);
+    bodyData.recaptchaToken = recaptchaToken; // Sisipkan token ke payload
+    
+    const data = await api('/api/login', { method: 'POST', body: JSON.stringify(bodyData) });
+    showToast('✅ ' + data.message);
     loginForm.reset();
     setTimeout(() => { window.location.href = '/profile'; }, 600);
   } catch (error) {
-    showToast(error.message);
+    showToast('❌ ' + error.message);
   }
 });
 
 // Register
 registerForm.addEventListener('submit', async (e) => {
   e.preventDefault();
+  
+  // Ambil token verifikasi bot
+  const recaptchaToken = await getRecaptchaToken('register');
+  if (!recaptchaToken) return; // Hentikan jika gagal ambil token
+
   try {
-    const data = await api('/api/register', { method: 'POST', body: JSON.stringify(formData(registerForm)) });
-    showToast(data.message);
+    const bodyData = formData(registerForm);
+    bodyData.recaptchaToken = recaptchaToken; // Sisipkan token ke payload
+    
+    const data = await api('/api/register', { method: 'POST', body: JSON.stringify(bodyData) });
+    showToast('✅ ' + data.message);
     registerForm.reset();
     setTimeout(() => { window.location.href = '/profile'; }, 600);
   } catch (error) {
-    showToast(error.message);
+    showToast('❌ ' + error.message);
   }
 });
 
