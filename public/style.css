@@ -371,3 +371,44 @@ select.input-field { appearance: none; background-image: url("data:image/svg+xml
   background: var(--primary); cursor: pointer; border: 2px solid var(--bg); box-shadow: 0 0 10px rgba(139, 92, 246, 0.5);
 }
 #fontSizeLabel { color: var(--primary-2); font-weight: 700; min-width: 40px; text-align: right; }
+
+/* ═══════════════════════════════════════
+   ANNOUNCEMENT BANNER (HOME)
+   ═══════════════════════════════════════ */
+.announcement-card {
+  padding: 1.25rem;
+  margin-bottom: 1.5rem;
+  border-color: var(--primary-2);
+  background: rgba(6, 182, 212, 0.05);
+  animation: slideDown 0.4s ease-out;
+}
+
+.announcement-header {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  margin-bottom: 0.5rem;
+}
+
+.announcement-icon {
+  font-size: 1.2rem;
+}
+
+.announcement-header h3 {
+  flex: 1;
+  margin: 0;
+  font-size: 1rem;
+  color: var(--primary-2);
+}
+
+.announcement-card p {
+  margin: 0;
+  font-size: 0.92rem;
+  color: var(--text);
+  line-height: 1.5;
+}
+
+@keyframes slideDown {
+  from { opacity: 0; transform: translateY(-20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
