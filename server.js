@@ -223,6 +223,49 @@ async function handleApi(req, res) {
     return sendJson(res, 201, { message: 'Komentar ditambahkan.' });
   }
 
+    // ── Admin: Get Users ──
+  if (req.method === 'GET' && pathname === '/api/admin/users') {
+    if (!session || session.role !== 'admin') return sendJson(res, 401, { message: 'Akses ditolak.' });
+    const users = await rows('SELECT id, username, created_at FROM users');
+    return sendJson(res, 200, users);
+  }
+
+  // ── Admin: Delete User ──
+  const userDeleteMatch = pathname.match(/^\/api\/admin\/users\/(\d+)$/);
+  if (req.method === 'DELETE' && userDeleteMatch) {
+    if (!session || session.role !== 'admin') return sendJson(res, 401, { message: 'Akses ditolak.' });
+    const userId = Number(userDeleteMatch[1]);
+    try {
+      await run('DELETE FROM snippets WHERE user_id = ?', [userId]); // Hapus snippet user
+      await run('DELETE FROM sessions WHERE user_id = ?', [userId]); // Hapus session user
+      await run('DELETE FROM users WHERE id = ?', [userId]);         // Hapus user
+      return sendJson(res, 200, { message: 'User dan snippet terkait berhasil dihapus.' });
+    } catch (error) {
+      return sendJson(res, 500, { message: 'Gagal menghapus user.' });
+    }
+  }
+
+  // ── Admin: Edit Snippet ──
+  const adminEditMatch = pathname.match(/^\/api\/admin\/snippets\/(\d+)$/);
+  if (req.method === 'PUT' && adminEditMatch) {
+    if (!session || session.role !== 'admin') return sendJson(res, 401, { message: 'Akses ditolak.' });
+    const id = Number(adminEditMatch[1]);
+    const body = await readJson(req);
+    const title = String(body.title || '').trim();
+    const description = String(body.description || '').trim();
+    const language = String(body.language || '').trim();
+    const code = String(body.code || '').trim();
+    
+    if (!title || !description || !language || !code) return sendJson(res, 400, { message: 'Semua kolom wajib diisi.' });
+    
+    try {
+      await run('UPDATE snippets SET title=?, description=?, language=?, code=? WHERE id=?', [title, description, language, code, id]);
+      return sendJson(res, 200, { message: 'Snippet berhasil diperbarui.' });
+    } catch (error) {
+      return sendJson(res, 500, { message: 'Gagal memperbarui snippet.' });
+    }
+  }
+
   // ── Admin Endpoints ──
   if (req.method === 'GET' && pathname === '/api/admin/stats') { if (!session || session.role !== 'admin') return sendJson(res, 401, { message: 'Akses admin ditolak.' }); const totals = await row(`SELECT (SELECT COUNT(*) FROM users) AS users, (SELECT COUNT(*) FROM snippets) AS snippets, (SELECT COALESCE(SUM(views), 0) FROM snippets) AS views, (SELECT COALESCE(SUM(copies), 0) FROM snippets) AS copies`); const snippets = await rows(`SELECT snippets.id, snippets.title, snippets.language, snippets.views, snippets.copies, snippets.created_at, users.username, users.avatar_url FROM snippets JOIN users ON users.id = snippets.user_id ORDER BY snippets.created_at DESC`); return sendJson(res, 200, { totals, snippets }); }
   const adminDeleteMatch = pathname.match(/^\/api\/admin\/snippets\/(\d+)$/);
