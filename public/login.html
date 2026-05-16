@@ -10,8 +10,8 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/style.css">
   
-  <!-- Google reCAPTCHA v3 Script dengan Site Key Anda -->
-  <script src="https://www.google.com/recaptcha/api.js?render=6LeAbe0sAAAAANyNb124Qv8eert55r62SxrK1HRN"></script>
+  <!-- Google reCAPTCHA V2 Script -->
+  <script src="https://www.google.com/recaptcha/api.js" async defer></script>
 </head>
 <body>
   <div class="grid-glow"></div>
@@ -45,6 +45,10 @@
             <label for="loginPass">Password</label>
             <input id="loginPass" name="password" type="password" placeholder="Password" autocomplete="current-password" required>
           </div>
+          
+          <!-- Widget Checkbox reCAPTCHA V2 -->
+          <div class="g-recaptcha" data-sitekey="6Leuge0sAAAAAOOyvE1uqqXZllL80cUVeq2iy7UP" data-theme="dark"></div>
+          
           <button class="btn primary full-width" type="submit">Login</button>
         </form>
 
@@ -57,6 +61,10 @@
             <label for="regPass">Password</label>
             <input id="regPass" name="password" type="password" placeholder="Password" autocomplete="new-password" required>
           </div>
+          
+          <!-- Widget Checkbox reCAPTCHA V2 -->
+          <div class="g-recaptcha" data-sitekey="6Leuge0sAAAAAOOyvE1uqqXZllL80cUVeq2iy7UP" data-theme="dark"></div>
+          
           <button class="btn primary full-width" type="submit">Daftar</button>
         </form>
       </div>
