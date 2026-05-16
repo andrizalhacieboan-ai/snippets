@@ -38,41 +38,57 @@
 
     <!-- Protected Content -->
     <div id="protectedContent" class="hidden">
-      <div class="page-header">
-        <p class="eyebrow">Profil</p>
-        <h1>Akun Saya</h1>
-      </div>
-
-      <div class="profile-header" id="profileHeader">
-        <div class="profile-avatar" id="profileAvatar">-</div>
+      
+      <!-- Profile Header -->
+      <div class="profile-header-card">
+        <div class="profile-avatar-wrapper">
+          <img id="profileAvatarImg" src="" alt="Avatar" class="profile-avatar-img">
+          <div class="avatar-overlay" id="avatarOverlay">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+          </div>
+          <input type="file" id="avatarInput" accept="image/*" hidden>
+        </div>
+        
         <div class="profile-info">
-          <h2 id="profileName">-</h2>
-          <p id="profileJoined">-</p>
+          <div class="profile-name-row">
+            <h2 id="profileName">Loading...</h2>
+            <button class="btn-icon" id="editNameBtn" title="Edit Username">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+            </button>
+          </div>
+          
+          <form id="editNameForm" class="edit-name-form hidden">
+            <input type="text" id="newUsernameInput" placeholder="Username baru" required>
+            <button type="submit" class="btn primary sm">Simpan</button>
+            <button type="button" class="btn ghost sm" id="cancelEditBtn">Batal</button>
+          </form>
+
+          <p class="muted" id="profileJoined">Bergabung sejak -</p>
         </div>
       </div>
 
-      <div class="profile-stats" id="profileStats">
-        <div class="profile-stat">
+      <!-- Interactive Stats -->
+      <div class="profile-stats">
+        <button class="stat-btn">
           <strong id="statSnippets">0</strong>
           <span>Snippet</span>
-        </div>
-        <div class="profile-stat">
+        </button>
+        <button class="stat-btn">
           <strong id="statViews">0</strong>
           <span>Views</span>
-        </div>
-        <div class="profile-stat">
+        </button>
+        <button class="stat-btn">
           <strong id="statCopies">0</strong>
-          <span>Salin</span>
-        </div>
+          <span>Disalin</span>
+        </button>
       </div>
 
-      <div class="section-heading">
+      <div class="section-heading" style="margin-top: 1.5rem;">
         <p class="eyebrow">Snippet Saya</p>
-        <h2>Snippet yang kamu upload</h2>
+        <h2>Karya Kamu</h2>
       </div>
 
       <div id="mySnippets" class="snippet-list">
-        <div class="skeleton skeleton-card"></div>
         <div class="skeleton skeleton-card"></div>
       </div>
     </div>
