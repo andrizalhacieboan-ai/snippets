@@ -1,4 +1,4 @@
-import { api, showToast, formData, escapeHtml, initTopbar, requireAuth, showSkeleton, showEmpty } from '/app.js';
+import { api, showToast, formData, escapeHtml, initTopbar, requireAuth, showSkeleton, showEmpty, applySiteSettings } from '/app.js';
 
 const adminForm = document.querySelector('#adminForm');
 const statsGrid = document.querySelector('#statsGrid');
@@ -23,7 +23,7 @@ async function checkAndLoad() {
     loadDashboard();
     loadUsers();
     loadSnippets();
-    loadSettings();
+    initSettingsUI(); // Inisialisasi UI Pengaturan
   } else {
     initTopbar();
   }
@@ -49,7 +49,7 @@ document.querySelectorAll('.admin-tab').forEach(tab => {
   });
 });
 
-// ── Load Data ──
+// ── Load Data Functions ──
 async function loadDashboard() {
   try {
     const data = await api('/api/admin/stats');
@@ -66,7 +66,7 @@ async function loadUsers() {
   showSkeleton(adminUsers, 3);
   try {
     const users = await api('/api/admin/users');
-    if (!users.length) { showEmpty(adminUsers, 'Tidak ada user.'); return; }
+    if (!users.length) { showEmpty(adminUsers, 'Tidak ada user terdaftar.'); return; }
     adminUsers.innerHTML = users.map(u => `
       <div class="admin-row glass-panel">
         <div style="min-width:0;">
@@ -82,12 +82,12 @@ async function loadUsers() {
         if (!confirm('Peringatan: Menghapus user akan menghapus semua snippet & sesi mereka. Lanjutkan?')) return;
         try {
           await api(`/api/admin/users/${btn.dataset.id}`, { method: 'DELETE' });
-          showToast('User dihapus.');
+          showToast('User berhasil dihapus.');
           loadUsers(); loadDashboard(); loadSnippets();
         } catch (error) { showToast(error.message); }
       });
     });
-  } catch (error) { showEmpty(adminUsers, 'Gagal memuat user.'); }
+  } catch (error) { showEmpty(adminUsers, 'Gagal memuat data user.'); }
 }
 
 async function loadSnippets() {
@@ -136,7 +136,7 @@ async function loadSnippets() {
         } catch (error) { showToast('Gagal memuat detail snippet.'); }
       });
     });
-  } catch (error) { showEmpty(adminSnippets, 'Gagal memuat snippet.'); }
+  } catch (error) { showEmpty(adminSnippets, 'Gagal memuat data snippet.'); }
 }
 
 // ── Edit Modal Logic ──
@@ -161,56 +161,44 @@ editSnippetForm.addEventListener('submit', async (e) => {
 });
 
 // ── Settings Logic (Theme & Font) ──
-function loadSettings() {
+function initSettingsUI() {
   const savedTheme = localStorage.getItem('ac-theme') || 'dark';
   const savedFont = localStorage.getItem('ac-font') || "'Inter', sans-serif";
   const savedSize = localStorage.getItem('ac-fontSize') || '16';
 
-  applyTheme(savedTheme);
-  applyFont(savedFont);
-  applyFontSize(savedSize);
-
+  // Sinkronkan UI dengan data yang tersimpan saat pertama load
   themeBtns.forEach(btn => {
     if (btn.dataset.theme === savedTheme) btn.classList.add('active');
     else btn.classList.remove('active');
-    
+  });
+  fontSelect.value = savedFont;
+  fontSizeRange.value = savedSize;
+  fontSizeLabel.textContent = `${savedSize}px`;
+
+  // Event Listener untuk Tema
+  themeBtns.forEach(btn => {
     btn.addEventListener('click', () => {
-      applyTheme(btn.dataset.theme);
       localStorage.setItem('ac-theme', btn.dataset.theme);
+      applySiteSettings(); // Panggil fungsi global dari app.js
       themeBtns.forEach(b => b.classList.remove('active'));
       btn.classList.add('active');
     });
   });
 
-  fontSelect.value = savedFont;
+  // Event Listener untuk Font
   fontSelect.addEventListener('change', (e) => {
-    applyFont(e.target.value);
     localStorage.setItem('ac-font', e.target.value);
+    applySiteSettings(); // Panggil fungsi global dari app.js
   });
 
-  fontSizeRange.value = savedSize;
-  fontSizeLabel.textContent = `${savedSize}px`;
+  // Event Listener untuk Ukuran Font
   fontSizeRange.addEventListener('input', (e) => {
-    applyFontSize(e.target.value);
-    fontSizeLabel.textContent = `${e.target.value}px`;
-    localStorage.setItem('ac-fontSize', e.target.value);
+    const size = e.target.value;
+    localStorage.setItem('ac-fontSize', size);
+    fontSizeLabel.textContent = `${size}px`;
+    applySiteSettings(); // Panggil fungsi global dari app.js
   });
 }
 
-function applyTheme(theme) {
-  const root = document.documentElement;
-  if (theme === 'ocean') {
-    root.style.setProperty('--bg', '#0f172a'); root.style.setProperty('--primary', '#0ea5e9'); root.style.setProperty('--primary-2', '#06b6d4');
-  } else if (theme === 'purple') {
-    root.style.setProperty('--bg', '#1a0b2e'); root.style.setProperty('--primary', '#d946ef'); root.style.setProperty('--primary-2', '#a855f7');
-  } else if (theme === 'terminal') {
-    root.style.setProperty('--bg', '#020603'); root.style.setProperty('--primary', '#22c55e'); root.style.setProperty('--primary-2', '#4ade80');
-  } else { // dark default
-    root.style.setProperty('--bg', '#050507'); root.style.setProperty('--primary', '#8b5cf6'); root.style.setProperty('--primary-2', '#06b6d4');
-  }
-}
-
-function applyFont(font) { document.body.style.fontFamily = font; }
-function applyFontSize(size) { document.documentElement.style.fontSize = `${size}px`; }
-
+// Jalankan aplikasi
 checkAndLoad();
