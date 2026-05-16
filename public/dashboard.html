@@ -20,7 +20,6 @@
   </header>
 
   <main>
-    <!-- Login Gate -->
     <div id="authGate">
       <div class="login-container">
         <div class="login-card glass-panel">
@@ -38,7 +37,6 @@
       </div>
     </div>
 
-    <!-- Dashboard Content -->
     <div id="protectedContent" class="hidden">
       <div class="page-header">
         <p class="eyebrow">Dashboard</p>
@@ -50,40 +48,35 @@
         <button class="admin-tab" data-tab="users">Users</button>
         <button class="admin-tab" data-tab="snippets">Snippets</button>
         <button class="admin-tab" data-tab="settings">Settings</button>
+        <button class="admin-tab" data-tab="announcements">Pengumuman</button>
       </div>
 
-      <!-- Tab: Overview -->
       <div id="tab-overview" class="tab-content">
         <div id="statsGrid" class="stats-grid"></div>
       </div>
 
-      <!-- Tab: Users -->
       <div id="tab-users" class="tab-content hidden">
         <div class="section-heading"><h2>Kelola User</h2></div>
         <div id="adminUsers" class="admin-list"></div>
       </div>
 
-      <!-- Tab: Snippets -->
       <div id="tab-snippets" class="tab-content hidden">
         <div class="section-heading"><h2>Kelola Snippet</h2></div>
         <div id="adminSnippets" class="admin-list"></div>
       </div>
 
-      <!-- Tab: Settings -->
       <div id="tab-settings" class="tab-content hidden">
         <div class="section-heading"><h2>Pengaturan Tampilan</h2><p class="muted">Ubah tema, font, dan ukuran teks.</p></div>
-        
         <div class="settings-grid">
           <div class="setting-card glass-panel">
             <h3>Warna Tema</h3>
             <div class="theme-options">
               <button class="theme-btn active" data-theme="dark" style="background: #050507; border-color: #8b5cf6;">Dark</button>
-              <button class="theme-btn" data-theme="ocean" style="background: #0f172a; border-color: #0ea5e9;">Ocean</button>
-              <button class="theme-btn" data-theme="purple" style="background: #1a0b2e; border-color: #d946ef;">Purple</button>
+              <button class="theme-btn" data-theme="ocean" style="background: #0b1120; border-color: #3b82f6;">Ocean</button>
+              <button class="theme-btn" data-theme="purple" style="background: #130a1e; border-color: #d946ef;">Purple</button>
               <button class="theme-btn" data-theme="terminal" style="background: #020603; border-color: #22c55e;">Terminal</button>
             </div>
           </div>
-          
           <div class="setting-card glass-panel">
             <h3>Jenis Font</h3>
             <select id="fontSelect" class="input-field">
@@ -93,7 +86,6 @@
               <option value="'JetBrains Mono', monospace">JetBrains Mono</option>
             </select>
           </div>
-
           <div class="setting-card glass-panel">
             <h3>Ukuran Font</h3>
             <div class="font-size-control">
@@ -103,10 +95,20 @@
           </div>
         </div>
       </div>
+
+      <div id="tab-announcements" class="tab-content hidden">
+        <div class="section-heading"><h2>Buat Pengumuman</h2><p class="muted">Kirim notifikasi ke semua pengguna di halaman utama.</p></div>
+        <form id="announcementForm" class="form-grid glass-panel panel" style="margin-top:0;">
+          <div class="form-field"><label>Judul Pengumuman</label><input id="annTitle" placeholder="Contoh: Maintenance Server" required></div>
+          <div class="form-field"><label>Isi Pengumuman</label><textarea id="annContent" rows="3" placeholder="Tulis isi pengumuman..." required></textarea></div>
+          <button type="submit" class="btn primary full-width">Kirim Pengumuman</button>
+        </form>
+        <div class="section-heading" style="margin-top:1.5rem;"><h2>Riwayat Pengumuman</h2></div>
+        <div id="adminAnnouncements" class="admin-list"></div>
+      </div>
     </div>
   </main>
 
-  <!-- Modal Edit Snippet -->
   <div id="editModal" class="modal-overlay hidden">
     <div class="modal-content glass-panel">
       <div class="modal-header">
