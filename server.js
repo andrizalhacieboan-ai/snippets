@@ -13,8 +13,7 @@ const adminUsername = process.env.ADMIN_USERNAME;
 const adminPassword = process.env.ADMIN_PASSWORD;
 const tursoUrl = process.env.TURSO_DATABASE_URL;
 const tursoAuthToken = process.env.TURSO_AUTH_TOKEN;
-const recaptchaSecretKey = process.env.RECAPTCHA_SECRET_KEY; // Tambahkan Env reCAPTCHA
-
+const recaptchaSecretKey = process.env.RECAPTCHA_SECRET_KEY || '6LeAbe0sAAAAAMGHEOVzN_vZOhkN5AgkcZhd77HU';
 const mimeTypes = {
   '.html': 'text/html; charset=utf-8',
   '.css': 'text/css; charset=utf-8',
