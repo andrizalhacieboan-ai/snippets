@@ -173,14 +173,24 @@ async function handleApi(req, res) {
 
   if (req.method === 'GET' && pathname === '/api/session') return sendJson(res, 200, session ? { loggedIn: true, role: session.role, username: session.username } : { loggedIn: false });
   
-  // ── Register with reCAPTCHA V2 ──
+  // ── Register (TANPA reCAPTCHA) ──
   if (req.method === 'POST' && pathname === '/api/register') { 
     const body = await readJson(req); 
-    if (!(await verifyRecaptcha(body.recaptchaToken))) {
-      return sendJson(res, 403, { message: 'Verifikasi keamanan gagal. Harap centang captcha.' });
-    }
-    const username = String(body.username || '').trim(); const usernameError = validateText(username, 'Username', 32); const passwordError = validateText(body.password, 'Password', 100); if (usernameError || passwordError) return sendJson(res, 400, { message: usernameError || passwordError }); if (!/^[a-zA-Z0-9_]{3,32}$/.test(username)) return sendJson(res, 400, { message: 'Username hanya boleh huruf, angka, underscore (3-32 karakter).' }); try { const result = await run('INSERT INTO users (username, password_hash) VALUES (?, ?)', [username, hashPassword(body.password)]); const token = await createSession({ role: 'user', userId: Number(result.lastInsertRowid), username }); setSessionCookie(res, token); return sendJson(res, 201, { message: 'Registrasi berhasil.', username }); } catch (error) { return sendJson(res, 409, { message: 'Username sudah digunakan.' }); } }
-
+    // Verifikasi Captcha DIHAPUS di sini
+    const username = String(body.username || '').trim(); 
+    const usernameError = validateText(username, 'Username', 32); 
+    const passwordError = validateText(body.password, 'Password', 100); 
+    if (usernameError || passwordError) return sendJson(res, 400, { message: usernameError || passwordError }); 
+    if (!/^[a-zA-Z0-9_]{3,32}$/.test(username)) return sendJson(res, 400, { message: 'Username hanya boleh huruf, angka, underscore (3-32 karakter).' }); 
+    try { 
+      await run('INSERT INTO users (username, password_hash) VALUES (?, ?)', [username, hashPassword(body.password)]); 
+      // Auto-login (createSession & setSessionCookie) DIHAPUS agar user harus login manual melewati Captcha
+      return sendJson(res, 201, { message: 'Registrasi berhasil. Silakan login.', username }); 
+    } catch (error) { 
+      return sendJson(res, 409, { message: 'Username sudah digunakan.' }); 
+    } 
+  }
+  
   // ── Login with reCAPTCHA V2 ──
   if (req.method === 'POST' && pathname === '/api/login') { 
     const body = await readJson(req); 
