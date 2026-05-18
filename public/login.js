@@ -20,9 +20,8 @@ tabs.forEach((tab) => {
   });
 });
 
-// Fungsi helper untuk mendapatkan token dari Checkbox V2
+// Fungsi helper untuk mendapatkan token dari Checkbox V2 (Hanya dipakai Login)
 function getRecaptchaResponse() {
-  // grecaptcha.getResponse() akan return string token jika dicentang, atau string kosong jika belum
   const token = grecaptcha.getResponse();
   if (!token) {
     showToast('⚠️ Harap centang konfirmasi "Saya bukan robot"');
@@ -31,49 +30,47 @@ function getRecaptchaResponse() {
   return token;
 }
 
-// Login
+// Login (Dengan reCAPTCHA)
 loginForm.addEventListener('submit', async (e) => {
   e.preventDefault();
   
-  // Ambil token dari checkbox
   const recaptchaToken = getRecaptchaResponse();
   if (!recaptchaToken) return;
 
   try {
     const bodyData = formData(loginForm);
-    bodyData.recaptchaToken = recaptchaToken; // Sisipkan token ke payload
+    bodyData.recaptchaToken = recaptchaToken; 
     
     const data = await api('/api/login', { method: 'POST', body: JSON.stringify(bodyData) });
     showToast('✅ ' + data.message);
     loginForm.reset();
-    grecaptcha.reset(); // Reset checkbox setelah submit
+    grecaptcha.reset(); 
     setTimeout(() => { window.location.href = '/profile'; }, 600);
   } catch (error) {
     showToast('❌ ' + error.message);
-    grecaptcha.reset(); // Reset juga jika gagal, agar bisa coba lagi
+    grecaptcha.reset(); 
   }
 });
 
-// Register
+// Register (TANPA reCAPTCHA)
 registerForm.addEventListener('submit', async (e) => {
   e.preventDefault();
-  
-  // Ambil token dari checkbox
-  const recaptchaToken = getRecaptchaResponse();
-  if (!recaptchaToken) return;
 
   try {
     const bodyData = formData(registerForm);
-    bodyData.recaptchaToken = recaptchaToken; // Sisipkan token ke payload
+    // Tidak ada recaptchaToken yang disisipkan
     
     const data = await api('/api/register', { method: 'POST', body: JSON.stringify(bodyData) });
-    showToast('✅ ' + data.message);
+    showToast('✅ ' + data.message + ' Silakan login.');
     registerForm.reset();
-    grecaptcha.reset(); // Reset checkbox setelah submit
-    setTimeout(() => { window.location.href = '/profile'; }, 600);
+    
+    // Pindah ke tab Login secara otomatis setelah 1 detik
+    setTimeout(() => {
+      document.querySelector('[data-tab="login"]').click();
+    }, 1000);
+
   } catch (error) {
     showToast('❌ ' + error.message);
-    grecaptcha.reset(); // Reset juga jika gagal
   }
 });
 
