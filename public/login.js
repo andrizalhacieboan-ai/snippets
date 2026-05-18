@@ -24,7 +24,7 @@ tabs.forEach((tab) => {
 function getRecaptchaResponse() {
   const token = grecaptcha.getResponse();
   if (!token) {
-    showToast('⚠️ Harap centang konfirmasi "Saya bukan robot"');
+    showToast('⚠️ Warning konfirmasi "Saya bukan robot"');
     return null;
   }
   return token;
