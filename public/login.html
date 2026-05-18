@@ -36,6 +36,7 @@
           <button class="login-tab" data-tab="register">Daftar</button>
         </div>
 
+        <!-- Form Login (Dengan reCAPTCHA) -->
         <form id="loginForm" class="form-grid">
           <div class="form-field">
             <label for="loginUser">Username</label>
@@ -46,12 +47,13 @@
             <input id="loginPass" name="password" type="password" placeholder="Password" autocomplete="current-password" required>
           </div>
           
-          <!-- Widget Checkbox reCAPTCHA V2 -->
-          <div class="g-recaptcha" data-sitekey="6Lc_jPAsAAAAAOtxofm5Uv60cNp_rb6Wo4GB3HeG" data-theme="dark"></div>
+          <!-- reCAPTCHA V2 Hanya di Login -->
+          <div class="g-recaptcha" data-sitekey="6Leuge0sAAAAAOOyvE1uqqXZllL80cUVeq2iy7UP" data-theme="dark"></div>
           
           <button class="btn primary full-width" type="submit">Login</button>
         </form>
 
+        <!-- Form Daftar (TANPA reCAPTCHA) -->
         <form id="registerForm" class="form-grid hidden">
           <div class="form-field">
             <label for="regUser">Username</label>
@@ -61,9 +63,6 @@
             <label for="regPass">Password</label>
             <input id="regPass" name="password" type="password" placeholder="Password" autocomplete="new-password" required>
           </div>
-          
-          <!-- Widget Checkbox reCAPTCHA V2 -->
-          <div class="g-recaptcha" data-sitekey="6Lc_jPAsAAAAAOtxofm5Uv60cNp_rb6Wo4GB3HeG" data-theme="dark"></div>
           
           <button class="btn primary full-width" type="submit">Daftar</button>
         </form>
