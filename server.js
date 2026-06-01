@@ -148,7 +148,7 @@ async function rows(sql, args = []) { return (await db.execute(sql, args)).rows;
 async function row(sql, args = []) { return (await db.execute(sql, args)).rows[0]; }
 async function run(sql, args = []) { return db.execute(sql, args); }
 
-const cleanUrlMap = { '/login': '/login.html', '/upload': '/upload.html', '/profile': '/profile.html', '/dashboard': '/dashboard.html' };
+const cleanUrlMap = { '/login': '/login.html', '/upload': '/upload.html', '/profile': '/profile.html', '/dashboard': '/dashboard.html', '/script': '/script.html' };
 function serveStatic(req, res) {
   const url = new URL(req.url, `http://${req.headers.host}`);
   let requestedPath = url.pathname === '/' ? '/index.html' : decodeURIComponent(url.pathname);
