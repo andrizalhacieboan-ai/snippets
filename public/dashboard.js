@@ -6,6 +6,8 @@ const adminUsers = document.querySelector('#adminUsers');
 const adminSnippets = document.querySelector('#adminSnippets');
 const adminAnnouncements = document.querySelector('#adminAnnouncements');
 const announcementForm = document.querySelector('#announcementForm');
+const scriptForm = document.querySelector('#scriptForm');
+const adminScriptsList = document.querySelector('#adminScriptsList');
 
 // Edit Modal Elements
 const editModal = document.querySelector('#editModal');
@@ -27,6 +29,7 @@ async function checkAndLoad() {
     loadSnippets();
     loadAnnouncements();
     initSettingsUI();
+    loadAdminScripts(); 
   } else {
     initTopbar();
   }
