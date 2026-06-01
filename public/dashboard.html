@@ -66,6 +66,20 @@
         <div id="adminSnippets" class="admin-list"></div>
       </div>
 
+         <div id="tab-scripts-manager" class="tab-content hidden">
+        <div class="section-heading"><h2>Upload Script Anda</h2><p class="muted">Upload link download (Mediafire, dll) dan thumbnail.</p></div>
+        <form id="scriptForm" class="form-grid glass-panel panel" style="margin-top:0;">
+          <div class="form-field"><label>Judul Script</label><input id="scriptTitle" placeholder="Contoh: Script Auto Order" required></div>
+          <div class="form-field"><label>Kategori</label><input id="scriptCategory" placeholder="Contoh: Game, Tools, MD"b required></div>
+          <div class="form-field"><label>URL Gambar Thumbnail (Opsional)</label><input id="scriptImage" placeholder="https://i.ibb.co/image.png"></div>
+          <div class="form-field"><label>URL Download</label><input id="scriptDownloadUrl" placeholder="https://www.mediafire.com/file/..." required></div>
+          <div class="form-field"><label>Deskripsi</label><textarea id="scriptDesc" rows="3" required></textarea></div>
+          <button type="submit" class="btn primary full-width">Tambah Script</button>
+        </form>
+        <div class="section-heading" style="margin-top:1.5rem;"><h2>Upload Script</h2></div>
+        <div id="adminScriptsList" class="admin-list"></div>
+      </div>   
+
       <div id="tab-settings" class="tab-content hidden">
         <div class="section-heading"><h2>Pengaturan Tampilan</h2><p class="muted">Ubah tema, font, dan ukuran teks.</p></div>
         <div class="settings-grid">
