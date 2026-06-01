@@ -115,6 +115,18 @@ async function initDb() {
     CREATE TABLE IF NOT EXISTS sessions (token TEXT PRIMARY KEY, role TEXT NOT NULL, user_id INTEGER, username TEXT NOT NULL, created_at INTEGER DEFAULT (strftime('%s', 'now')));
     CREATE TABLE IF NOT EXISTS comments (id INTEGER PRIMARY KEY AUTOINCREMENT, snippet_id INTEGER NOT NULL, user_id INTEGER, username TEXT NOT NULL, avatar_url TEXT DEFAULT NULL, content TEXT NOT NULL, created_at TEXT DEFAULT CURRENT_TIMESTAMP, FOREIGN KEY (snippet_id) REFERENCES snippets(id) ON DELETE CASCADE);
     CREATE TABLE IF NOT EXISTS announcements (id INTEGER PRIMARY KEY AUTOINCREMENT, title TEXT NOT NULL, content TEXT NOT NULL, created_at TEXT DEFAULT CURRENT_TIMESTAMP);
+    
+   
+    CREATE TABLE IF NOT EXISTS scripts (
+      id INTEGER PRIMARY KEY AUTOINCREMENT, 
+      title TEXT NOT NULL, 
+      description TEXT NOT NULL, 
+      category TEXT NOT NULL, 
+      image_url TEXT DEFAULT NULL, 
+      download_url TEXT NOT NULL, 
+      downloads INTEGER DEFAULT 0, 
+      created_at TEXT DEFAULT CURRENT_TIMESTAMP
+    );
   `);
   try { await db.exec(`ALTER TABLE users ADD COLUMN avatar_url TEXT DEFAULT NULL;`); } catch (e) {}
 }
@@ -237,6 +249,46 @@ async function handleApi(req, res) {
   const adminAnnDeleteMatch = pathname.match(/^\/api\/admin\/announcements\/(\d+)$/);
   if (req.method === 'DELETE' && adminAnnDeleteMatch) { if (!session || session.role !== 'admin') return sendJson(res, 401, { message: 'Akses ditolak.' }); await run('DELETE FROM announcements WHERE id = ?', [Number(adminAnnDeleteMatch[1])]); return sendJson(res, 200, { message: 'Pengumuman dihapus.' }); }
 
+    // ── Scripts (Download) Endpoints ──
+  if (req.method === 'GET' && pathname === '/api/scripts') {
+    const scripts = await rows('SELECT * FROM scripts ORDER BY created_at DESC');
+    return sendJson(res, 200, scripts);
+  }
+
+  const scriptDownloadMatch = pathname.match(/^\/api\/scripts\/(\d+)\/download$/);
+  if (req.method === 'POST' && scriptDownloadMatch) {
+    const id = Number(scriptDownloadMatch[1]);
+    await run('UPDATE scripts SET downloads = downloads + 1 WHERE id = ?', [id]);
+    const script = await row('SELECT downloads FROM scripts WHERE id = ?', [id]);
+    if (!script) return sendJson(res, 404, { message: 'Script tidak ditemukan.' });
+    return sendJson(res, 200, { downloads: Number(script.downloads) });
+  }
+
+  if (req.method === 'POST' && pathname === '/api/admin/scripts') {
+    if (!session || session.role !== 'admin') return sendJson(res, 401, { message: 'Akses ditolak.' });
+    const body = await readJson(req);
+    const title = String(body.title || '').trim();
+    const description = String(body.description || '').trim();
+    const category = String(body.category || '').trim();
+    const image_url = String(body.image_url || '').trim();
+    const download_url = String(body.download_url || '').trim();
+
+    if (!title || !description || !category || !download_url) {
+      return sendJson(res, 400, { message: 'Judul, deskripsi, kategori, dan link download wajib diisi.' });
+    }
+
+    await run('INSERT INTO scripts (title, description, category, image_url, download_url) VALUES (?, ?, ?, ?, ?)', 
+      [title, description, category, image_url || null, download_url]);
+    return sendJson(res, 201, { message: 'Script berhasil ditambahkan!' });
+  }
+
+  const adminScriptDeleteMatch = pathname.match(/^\/api\/admin\/scripts\/(\d+)$/);
+  if (req.method === 'DELETE' && adminScriptDeleteMatch) {
+    if (!session || session.role !== 'admin') return sendJson(res, 401, { message: 'Akses ditolak.' });
+    await run('DELETE FROM scripts WHERE id = ?', [Number(adminScriptDeleteMatch[1])]);
+    return sendJson(res, 200, { message: 'Script dihapus.' });
+  }
+  
   // ── Admin Endpoints ──
   if (req.method === 'GET' && pathname === '/api/admin/users') { if (!session || session.role !== 'admin') return sendJson(res, 401, { message: 'Akses ditolak.' }); const users = await rows('SELECT id, username, created_at FROM users'); return sendJson(res, 200, users); }
   const adminUserDeleteMatch = pathname.match(/^\/api\/admin\/users\/(\d+)$/);
