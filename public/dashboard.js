@@ -20,6 +20,47 @@ const fontSelect = document.getElementById('fontSelect');
 const fontSizeRange = document.getElementById('fontSizeRange');
 const fontSizeLabel = document.getElementById('fontSizeLabel');
 
+async function loadAdminScripts() {
+  showSkeleton(adminScriptsList, 2);
+  try {
+    const scripts = await api('/api/scripts');
+    if (!scripts.length) { showEmpty(adminScriptsList, 'Belum ada script.'); return; }
+    adminScriptsList.innerHTML = scripts.map(s => `
+      <div class="admin-row glass-panel" style="flex-direction:column; gap:0.5rem;">
+        <div style="display:flex; justify-content:space-between; align-items:center;">
+          <strong>${escapeHtml(s.title)}</strong>
+          <button class="btn danger sm delete-script-btn" data-id="${s.id}">Hapus</button>
+        </div>
+        <p class="muted" style="font-size:0.85rem; margin:0;">Kategori: ${escapeHtml(s.category)} • ⬇️ ${s.downloads} downloads</p>
+      </div>
+    `).join('');
+    
+    adminScriptsList.querySelectorAll('.delete-script-btn').forEach(btn => {
+      btn.addEventListener('click', async () => {
+        if (!confirm('Hapus script ini?')) return;
+        try { await api(`/api/admin/scripts/${btn.dataset.id}`, { method: 'DELETE' }); showToast('Script dihapus.'); loadAdminScripts(); } catch (e) { showToast(e.message); }
+      });
+    });
+  } catch (error) { showEmpty(adminScriptsList, 'Gagal memuat script.'); }
+}
+
+scriptForm.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const payload = {
+    title: document.getElementById('scriptTitle').value,
+    category: document.getElementById('scriptCategory').value,
+    image_url: document.getElementById('scriptImage').value,
+    download_url: document.getElementById('scriptDownloadUrl').value,
+    description: document.getElementById('scriptDesc').value
+  };
+  try {
+    await api('/api/admin/scripts', { method: 'POST', body: JSON.stringify(payload) });
+    showToast('Script berhasil ditambahkan!');
+    scriptForm.reset();
+    loadAdminScripts();
+  } catch (error) { showToast(error.message); }
+});
+
 async function checkAndLoad() {
   const session = await requireAuth('admin');
   if (session) {
