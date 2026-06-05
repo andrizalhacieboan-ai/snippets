@@ -20,51 +20,51 @@ tabs.forEach((tab) => {
   });
 });
 
-// Fungsi helper untuk mendapatkan token dari Checkbox V2 (Hanya dipakai Login)
-function getRecaptchaResponse() {
-  const token = grecaptcha.getResponse();
+// Fungsi helper untuk mendapatkan token dari Checkbox hCaptcha
+function getCaptchaResponse() {
+  // Menggunakan hcaptcha.getResponse() sebagai pengganti grecaptcha
+  const token = hcaptcha.getResponse();
   if (!token) {
-    showToast('⚠️ Warning konfirmasi "Saya bukan robot"');
+    showToast('⚠️ Harap centang konfirmasi "I am human"');
     return null;
   }
   return token;
 }
 
-// Login (Dengan reCAPTCHA)
+// Login (Dengan hCaptcha)
 loginForm.addEventListener('submit', async (e) => {
   e.preventDefault();
   
-  const recaptchaToken = getRecaptchaResponse();
+  const recaptchaToken = getCaptchaResponse();
   if (!recaptchaToken) return;
 
   try {
     const bodyData = formData(loginForm);
-    bodyData.recaptchaToken = recaptchaToken; 
+    bodyData.recaptchaToken = recaptchaToken; // Nama variabel tetap sama agar backend tidak perlu diubah valiasinya
     
     const data = await api('/api/login', { method: 'POST', body: JSON.stringify(bodyData) });
     showToast('✅ ' + data.message);
     loginForm.reset();
-    grecaptcha.reset(); 
+    hcaptcha.reset(); // Reset widget hCaptcha
     setTimeout(() => { window.location.href = '/profile'; }, 600);
   } catch (error) {
     showToast('❌ ' + error.message);
-    grecaptcha.reset(); 
+    hcaptcha.reset(); // Reset jika gagal
   }
 });
 
-// Register (TANPA reCAPTCHA)
+// Register (TANPA Captcha)
 registerForm.addEventListener('submit', async (e) => {
   e.preventDefault();
 
   try {
     const bodyData = formData(registerForm);
-    // Tidak ada recaptchaToken yang disisipkan
     
     const data = await api('/api/register', { method: 'POST', body: JSON.stringify(bodyData) });
-    showToast('✅ ' + data.message + ' Silakan login.');
+    showToast('✅ ' + data.message + ' Silahkan login.');
     registerForm.reset();
     
-    // Pindah ke tab Login secara otomatis setelah 1 detik
+    // Pindah ke tab Login
     setTimeout(() => {
       document.querySelector('[data-tab="login"]').click();
     }, 1000);
