@@ -13,8 +13,7 @@ const adminUsername = process.env.ADMIN_USERNAME;
 const adminPassword = process.env.ADMIN_PASSWORD;
 const tursoUrl = process.env.TURSO_DATABASE_URL;
 const tursoAuthToken = process.env.TURSO_AUTH_TOKEN;
-// Secret Key V2 Anda
-const recaptchaSecretKey = process.env.RECAPTCHA_SECRET_KEY || '6Leuge0sAAAAAOOyvE1uqqXZllL80cUVeq2iy7UP'; 
+ 
 
 const mimeTypes = {
   '.html': 'text/html; charset=utf-8',
@@ -162,18 +161,29 @@ function serveStatic(req, res) {
   });
 }
 
-// ── reCAPTCHA V2 Verification Helper ──
+// ── hCaptcha Verification Helper ──
 async function verifyRecaptcha(token) {
-  if (!recaptchaSecretKey) return true; 
+  const captchaSecret = process.env.HCAPTCHA_SECRET_KEY || 'ES_49f86f420c0e4574877322993ce5d296'; // Ganti ini
+  if (!captchaSecret || captchaSecret === 'ES_49f86f420c0e4574877322993ce5d296') return true; // Lewati jika belum dikonfigurasi
   if (!token) return false;
   try {
-    const verifyUrl = `https://www.google.com/recaptcha/api/siteverify?secret=${recaptchaSecretKey}&response=${token}`;
-    const response = await fetch(verifyUrl, { method: 'POST' });
+    const verifyUrl = 'https://hcaptcha.com/siteverify';
+    
+    // hCaptcha membutuhkan format application/x-www-form-urlencoded
+    const params = new URLSearchParams();
+    params.append('secret', captchaSecret);
+    params.append('response', token);
+
+    const response = await fetch(verifyUrl, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: params.toString()
+    });
+
     const data = await response.json();
-    // Di V2, kita hanya mengecek apakah berhasil, tanpa skor
     return data.success === true; 
   } catch (error) {
-    console.error('reCAPTCHA V2 verification error:', error);
+    console.error('hCaptcha verification error:', error);
     return false;
   }
 }
