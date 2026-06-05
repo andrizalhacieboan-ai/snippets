@@ -186,11 +186,48 @@ function initSettingsUI() {
   const savedTheme = localStorage.getItem('ac-theme') || 'dark';
   const savedFont = localStorage.getItem('ac-font') || "'Inter', sans-serif";
   const savedSize = localStorage.getItem('ac-fontSize') || '16';
-  themeBtns.forEach(btn => { if (btn.dataset.theme === savedTheme) btn.classList.add('active'); else btn.classList.remove('active'); });
-  fontSelect.value = savedFont; fontSizeRange.value = savedSize; fontSizeLabel.textContent = `${savedSize}px`;
-  themeBtns.forEach(btn => { btn.addEventListener('click', () => { localStorage.setItem('ac-theme', btn.dataset.theme); applySiteSettings(); themeBtns.forEach(b => b.classList.remove('active')); btn.classList.add('active'); }); });
-  fontSelect.addEventListener('change', (e) => { localStorage.setItem('ac-font', e.target.value); applySiteSettings(); });
-  fontSizeRange.addEventListener('input', (e) => { const size = e.target.value; localStorage.setItem('ac-fontSize', size); fontSizeLabel.textContent = `${size}px`; applySiteSettings(); });
+
+  // Sinkronisasi status tombol aktif saat inisialisasi pertama kali
+  themeBtns.forEach(btn => {
+    if (btn.dataset.theme === savedTheme) {
+      btn.classList.add('active');
+    } else {
+      btn.classList.remove('active');
+    }
+  });
+
+  fontSelect.value = savedFont;
+  fontSizeRange.value = savedSize;
+  fontSizeLabel.textContent = `${savedSize}px`;
+
+  // Mendaftarkan event listener klik untuk semua tombol tema, termasuk tombol tema "spaace" baru
+  themeBtns.forEach(btn => {
+    btn.addEventListener('click', () => {
+      const themeName = btn.dataset.theme;
+      localStorage.setItem('ac-theme', themeName);
+      
+      // Menerapkan gaya tema secara instan di sisi client
+      applySiteSettings();
+      
+      // Update status class visual aktif pada tombol
+      themeBtns.forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      
+      showToast(`Tema diubah ke ${themeName.toUpperCase()}`);
+    });
+  });
+
+  fontSelect.addEventListener('change', (e) => {
+    localStorage.setItem('ac-font', e.target.value);
+    applySiteSettings();
+  });
+
+  fontSizeRange.addEventListener('input', (e) => {
+    const size = e.target.value;
+    localStorage.setItem('ac-fontSize', size);
+    fontSizeLabel.textContent = `${size}px`;
+    applySiteSettings();
+  });
 }
 
 checkAndLoad();
