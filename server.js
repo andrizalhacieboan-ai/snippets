@@ -13,7 +13,6 @@ const adminUsername = process.env.ADMIN_USERNAME;
 const adminPassword = process.env.ADMIN_PASSWORD;
 const tursoUrl = process.env.TURSO_DATABASE_URL;
 const tursoAuthToken = process.env.TURSO_AUTH_TOKEN;
- 
 
 const mimeTypes = {
   '.html': 'text/html; charset=utf-8',
@@ -26,6 +25,8 @@ const mimeTypes = {
   '.jpeg': 'image/jpeg',
   '.ico': 'image/x-icon',
 };
+
+/* ── SQL Helpers ── */
 
 function normalizeSqlValue(value) {
   if (value === null || value === undefined) return { type: 'null' };
@@ -57,6 +58,8 @@ function createRows(result) {
 function splitSqlStatements(sql) {
   return sql.split(';').map((s) => s.trim()).filter(Boolean);
 }
+
+/* ── Database ── */
 
 function getLocalDbPath() {
   if (process.env.SQLITE_PATH) return process.env.SQLITE_PATH;
@@ -114,8 +117,6 @@ async function initDb() {
     CREATE TABLE IF NOT EXISTS sessions (token TEXT PRIMARY KEY, role TEXT NOT NULL, user_id INTEGER, username TEXT NOT NULL, created_at INTEGER DEFAULT (strftime('%s', 'now')));
     CREATE TABLE IF NOT EXISTS comments (id INTEGER PRIMARY KEY AUTOINCREMENT, snippet_id INTEGER NOT NULL, user_id INTEGER, username TEXT NOT NULL, avatar_url TEXT DEFAULT NULL, content TEXT NOT NULL, created_at TEXT DEFAULT CURRENT_TIMESTAMP, FOREIGN KEY (snippet_id) REFERENCES snippets(id) ON DELETE CASCADE);
     CREATE TABLE IF NOT EXISTS announcements (id INTEGER PRIMARY KEY AUTOINCREMENT, title TEXT NOT NULL, content TEXT NOT NULL, created_at TEXT DEFAULT CURRENT_TIMESTAMP);
-    
-   
     CREATE TABLE IF NOT EXISTS scripts (
       id INTEGER PRIMARY KEY AUTOINCREMENT, 
       title TEXT NOT NULL, 
@@ -129,6 +130,8 @@ async function initDb() {
   `);
   try { await db.exec(`ALTER TABLE users ADD COLUMN avatar_url TEXT DEFAULT NULL;`); } catch (e) {}
 }
+
+/* ── Core Helpers ── */
 
 function sendJson(res, statusCode, payload) { res.writeHead(statusCode, { 'Content-Type': 'application/json; charset=utf-8' }); res.end(JSON.stringify(payload)); }
 function parseCookies(req) { return Object.fromEntries((req.headers.cookie || '').split(';').filter(Boolean).map((cookie) => { const [key, ...value] = cookie.trim().split('='); return [key, decodeURIComponent(value.join('='))]; })); }
@@ -147,6 +150,8 @@ async function rows(sql, args = []) { return (await db.execute(sql, args)).rows;
 async function row(sql, args = []) { return (await db.execute(sql, args)).rows[0]; }
 async function run(sql, args = []) { return db.execute(sql, args); }
 
+/* ── Static Files ── */
+
 const cleanUrlMap = { '/login': '/login.html', '/upload': '/upload.html', '/profile': '/profile.html', '/dashboard': '/dashboard.html', '/script': '/script.html' };
 function serveStatic(req, res) {
   const url = new URL(req.url, `http://${req.headers.host}`);
@@ -161,15 +166,21 @@ function serveStatic(req, res) {
   });
 }
 
-// ── hCaptcha Verification Helper ──
+/* ── hCaptcha Verification ── */
+
 async function verifyRecaptcha(token) {
-  const captchaSecret = process.env.HCAPTCHA_SECRET_KEY || 'ES_49f86f420c0e4574877322993ce5d296'; // Ganti ini
-  if (!captchaSecret || captchaSecret === 'ES_49f86f420c0e4574877322993ce5d296') return true; // Lewati jika belum dikonfigurasi
+  const captchaSecret = process.env.HCAPTCHA_SECRET_KEY;
+  
+  // Jika ENV tidak diset, skip verifikasi (berguna untuk testing lokal)
+  if (!captchaSecret) {
+    console.warn('⚠️ HCAPTCHA_SECRET_KEY belum diset di Environment. Verifikasi hCaptcha dilewati (Bypass).');
+    return true; 
+  }
+  
   if (!token) return false;
+  
   try {
-    const verifyUrl = 'https://hcaptcha.com/siteverify';
-    
-    // hCaptcha membutuhkan format application/x-www-form-urlencoded
+    const verifyUrl = 'https://api.hcaptcha.com/siteverify';
     const params = new URLSearchParams();
     params.append('secret', captchaSecret);
     params.append('response', token);
@@ -183,22 +194,24 @@ async function verifyRecaptcha(token) {
     const data = await response.json();
     return data.success === true; 
   } catch (error) {
-    console.error('hCaptcha verification error:', error);
-    return false;
+    console.error('❌ hCaptcha verification error:', error);
+    return false; // Jika error (jaringan, dll), gagalkan untuk keamanan
   }
 }
+
+/* ── API Handler ── */
 
 async function handleApi(req, res) {
   const url = new URL(req.url, `http://${req.headers.host}`);
   const pathname = url.pathname;
   const session = await getSession(req);
 
+  // Session check
   if (req.method === 'GET' && pathname === '/api/session') return sendJson(res, 200, session ? { loggedIn: true, role: session.role, username: session.username } : { loggedIn: false });
   
-  // ── Register (TANPA reCAPTCHA) ──
+  // ── Register (TANPA hCaptcha) ──
   if (req.method === 'POST' && pathname === '/api/register') { 
     const body = await readJson(req); 
-    // Verifikasi Captcha DIHAPUS di sini
     const username = String(body.username || '').trim(); 
     const usernameError = validateText(username, 'Username', 32); 
     const passwordError = validateText(body.password, 'Password', 100); 
@@ -206,24 +219,36 @@ async function handleApi(req, res) {
     if (!/^[a-zA-Z0-9_]{3,32}$/.test(username)) return sendJson(res, 400, { message: 'Username hanya boleh huruf, angka, underscore (3-32 karakter).' }); 
     try { 
       await run('INSERT INTO users (username, password_hash) VALUES (?, ?)', [username, hashPassword(body.password)]); 
-      // Auto-login (createSession & setSessionCookie) DIHAPUS agar user harus login manual melewati Captcha
+      // Tidak auto-login setelah register, user harus lewat Login + Captcha
       return sendJson(res, 201, { message: 'Registrasi berhasil. Silakan login.', username }); 
     } catch (error) { 
       return sendJson(res, 409, { message: 'Username sudah digunakan.' }); 
     } 
   }
   
-  // ── Login with reCAPTCHA V2 ──
+  // ── Login (DENGAN hCaptcha) ──
   if (req.method === 'POST' && pathname === '/api/login') { 
     const body = await readJson(req); 
+    
+    // Verifikasi hCaptcha
     if (!(await verifyRecaptcha(body.recaptchaToken))) {
       return sendJson(res, 403, { message: 'Verifikasi keamanan gagal. Harap centang captcha.' });
     }
-    const user = await row('SELECT * FROM users WHERE username = ?', [String(body.username || '').trim()]); if (!user || !verifyPassword(String(body.password || ''), user.password_hash)) return sendJson(res, 401, { message: 'Username atau password salah.' }); const token = await createSession({ role: 'user', userId: Number(user.id), username: user.username }); setSessionCookie(res, token); return sendJson(res, 200, { message: 'Login berhasil.', username: user.username }); }
 
+    const user = await row('SELECT * FROM users WHERE username = ?', [String(body.username || '').trim()]); 
+    if (!user || !verifyPassword(String(body.password || ''), user.password_hash)) return sendJson(res, 401, { message: 'Username atau password salah.' }); 
+    const token = await createSession({ role: 'user', userId: Number(user.id), username: user.username }); 
+    setSessionCookie(res, token); 
+    return sendJson(res, 200, { message: 'Login berhasil.', username: user.username }); 
+  }
+
+  // Admin Login
   if (req.method === 'POST' && pathname === '/api/admin/login') { const body = await readJson(req); if (body.username !== adminUsername || body.password !== adminPassword) return sendJson(res, 401, { message: 'Username atau password admin salah.' }); const token = await createSession({ role: 'admin', username: adminUsername }); setSessionCookie(res, token); return sendJson(res, 200, { message: 'Login admin berhasil.', username: adminUsername }); }
+  
+  // Logout
   if (req.method === 'POST' && pathname === '/api/logout') { if (session) await run('DELETE FROM sessions WHERE token = ?', [session.token]); clearSessionCookie(res); return sendJson(res, 200, { message: 'Logout berhasil.' }); }
 
+  // ── Snippets ──
   if (req.method === 'GET' && pathname === '/api/snippets') {
     const snippets = await rows(`SELECT snippets.id, snippets.title, snippets.description, snippets.language, snippets.views, snippets.copies, snippets.created_at, users.username, users.avatar_url FROM snippets JOIN users ON users.id = snippets.user_id ORDER BY snippets.created_at DESC`);
     return sendJson(res, 200, snippets);
@@ -240,7 +265,7 @@ async function handleApi(req, res) {
   const copyMatch = pathname.match(/^\/api\/snippets\/(\d+)\/copy$/);
   if (req.method === 'POST' && copyMatch) { const id = Number(copyMatch[1]); await run('UPDATE snippets SET copies = copies + 1 WHERE id = ?', [id]); const snippet = await row('SELECT copies FROM snippets WHERE id = ?', [id]); if (!snippet) return sendJson(res, 404, { message: 'Snippet tidak ditemukan.' }); return sendJson(res, 200, { copies: Number(snippet.copies) }); }
 
-  // ── User Profile Endpoints ──
+  // ── User Profile ──
   if (req.method === 'GET' && pathname === '/api/user/profile') { if (!session || session.role !== 'user') return sendJson(res, 401, { message: 'Silakan login terlebih dahulu.' }); const user = await row('SELECT id, username, avatar_url, created_at FROM users WHERE id = ?', [session.userId]); if (!user) return sendJson(res, 404, { message: 'User tidak ditemukan.' }); const stats = await row('SELECT COUNT(*) as total_snippets, COALESCE(SUM(views),0) as total_views, COALESCE(SUM(copies),0) as total_copies FROM snippets WHERE user_id = ?', [session.userId]); return sendJson(res, 200, { ...user, stats }); }
   if (req.method === 'GET' && pathname === '/api/user/snippets') { if (!session || session.role !== 'user') return sendJson(res, 401, { message: 'Silakan login terlebih dahulu.' }); const snippets = await rows('SELECT id, title, description, language, views, copies, created_at FROM snippets WHERE user_id = ? ORDER BY created_at DESC', [session.userId]); return sendJson(res, 200, snippets); }
   const userSnippetDeleteMatch = pathname.match(/^\/api\/user\/snippets\/(\d+)$/);
@@ -248,23 +273,22 @@ async function handleApi(req, res) {
   if (req.method === 'POST' && pathname === '/api/user/update-username') { if (!session || session.role !== 'user') return sendJson(res, 401, { message: 'Silakan login.' }); const body = await readJson(req); const newUsername = String(body.username || '').trim(); if (!newUsername || newUsername.length < 3 || newUsername.length > 32) return sendJson(res, 400, { message: 'Username harus 3-32 karakter.' }); if (!/^[a-zA-Z0-9_]+$/.test(newUsername)) return sendJson(res, 400, { message: 'Username hanya boleh huruf, angka, underscore.' }); try { const existing = await row('SELECT id FROM users WHERE username = ? AND id != ?', [newUsername, session.userId]); if (existing) return sendJson(res, 409, { message: 'Username sudah dipakai.' }); await run('UPDATE users SET username = ? WHERE id = ?', [newUsername, session.userId]); await run('UPDATE sessions SET username = ? WHERE token = ?', [newUsername, session.token]); return sendJson(res, 200, { message: 'Username berhasil diubah!', username: newUsername }); } catch (error) { return sendJson(res, 500, { message: 'Gagal mengubah username.' }); } }
   if (req.method === 'POST' && pathname === '/api/user/avatar') { if (!session || session.role !== 'user') return sendJson(res, 401, { message: 'Silakan login.' }); const body = await readJson(req); if (!body.avatar || !body.avatar.startsWith('data:image')) return sendJson(res, 400, { message: 'Format gambar tidak valid.' }); try { await run('UPDATE users SET avatar_url = ? WHERE id = ?', [body.avatar, session.userId]); return sendJson(res, 200, { message: 'Avatar berhasil diubah!' }); } catch (error) { return sendJson(res, 500, { message: 'Gagal upload avatar.' }); } }
 
-  // ── Comments Endpoints ──
+  // ── Comments ──
   const commentsMatch = pathname.match(/^\/api\/snippets\/(\d+)\/comments$/);
   if (req.method === 'GET' && commentsMatch) { const id = Number(commentsMatch[1]); const comments = await rows('SELECT id, username, avatar_url, content, created_at FROM comments WHERE snippet_id = ? ORDER BY created_at ASC', [id]); return sendJson(res, 200, comments); }
   if (req.method === 'POST' && commentsMatch) { if (!session) return sendJson(res, 401, { message: 'Login untuk berkomentar.' }); const id = Number(commentsMatch[1]); const body = await readJson(req); const content = String(body.content || '').trim(); if (!content) return sendJson(res, 400, { message: 'Komentar tidak boleh kosong.' }); if (content.length > 500) return sendJson(res, 400, { message: 'Komentar maks 500 karakter.' }); const user = await row('SELECT avatar_url FROM users WHERE id = ?', [session.userId]); await run('INSERT INTO comments (snippet_id, user_id, username, avatar_url, content) VALUES (?, ?, ?, ?, ?)', [id, session.userId, session.username, user?.avatar_url || null, content]); return sendJson(res, 201, { message: 'Komentar ditambahkan.' }); }
 
-  // ── Announcements Endpoints ──
+  // ── Announcements ──
   if (req.method === 'GET' && pathname === '/api/announcements') { const announcements = await rows('SELECT * FROM announcements ORDER BY created_at DESC LIMIT 5'); return sendJson(res, 200, announcements); }
   if (req.method === 'POST' && pathname === '/api/admin/announcements') { if (!session || session.role !== 'admin') return sendJson(res, 401, { message: 'Akses ditolak.' }); const body = await readJson(req); const title = String(body.title || '').trim(); const content = String(body.content || '').trim(); if (!title || !content) return sendJson(res, 400, { message: 'Judul dan isi wajib diisi.' }); await run('INSERT INTO announcements (title, content) VALUES (?, ?)', [title, content]); return sendJson(res, 201, { message: 'Pengumuman berhasil dikirim!' }); }
   const adminAnnDeleteMatch = pathname.match(/^\/api\/admin\/announcements\/(\d+)$/);
   if (req.method === 'DELETE' && adminAnnDeleteMatch) { if (!session || session.role !== 'admin') return sendJson(res, 401, { message: 'Akses ditolak.' }); await run('DELETE FROM announcements WHERE id = ?', [Number(adminAnnDeleteMatch[1])]); return sendJson(res, 200, { message: 'Pengumuman dihapus.' }); }
 
-    // ── Scripts (Download) Endpoints ──
+  // ── Scripts (Download Center) ──
   if (req.method === 'GET' && pathname === '/api/scripts') {
     const scripts = await rows('SELECT * FROM scripts ORDER BY created_at DESC');
     return sendJson(res, 200, scripts);
   }
-
   const scriptDownloadMatch = pathname.match(/^\/api\/scripts\/(\d+)\/download$/);
   if (req.method === 'POST' && scriptDownloadMatch) {
     const id = Number(scriptDownloadMatch[1]);
@@ -273,25 +297,14 @@ async function handleApi(req, res) {
     if (!script) return sendJson(res, 404, { message: 'Script tidak ditemukan.' });
     return sendJson(res, 200, { downloads: Number(script.downloads) });
   }
-
   if (req.method === 'POST' && pathname === '/api/admin/scripts') {
     if (!session || session.role !== 'admin') return sendJson(res, 401, { message: 'Akses ditolak.' });
     const body = await readJson(req);
-    const title = String(body.title || '').trim();
-    const description = String(body.description || '').trim();
-    const category = String(body.category || '').trim();
-    const image_url = String(body.image_url || '').trim();
-    const download_url = String(body.download_url || '').trim();
-
-    if (!title || !description || !category || !download_url) {
-      return sendJson(res, 400, { message: 'Judul, deskripsi, kategori, dan link download wajib diisi.' });
-    }
-
-    await run('INSERT INTO scripts (title, description, category, image_url, download_url) VALUES (?, ?, ?, ?, ?)', 
-      [title, description, category, image_url || null, download_url]);
+    const title = String(body.title || '').trim(); const description = String(body.description || '').trim(); const category = String(body.category || '').trim(); const image_url = String(body.image_url || '').trim(); const download_url = String(body.download_url || '').trim();
+    if (!title || !description || !category || !download_url) return sendJson(res, 400, { message: 'Judul, deskripsi, kategori, dan link download wajib diisi.' });
+    await run('INSERT INTO scripts (title, description, category, image_url, download_url) VALUES (?, ?, ?, ?, ?)', [title, description, category, image_url || null, download_url]);
     return sendJson(res, 201, { message: 'Script berhasil ditambahkan!' });
   }
-
   const adminScriptDeleteMatch = pathname.match(/^\/api\/admin\/scripts\/(\d+)$/);
   if (req.method === 'DELETE' && adminScriptDeleteMatch) {
     if (!session || session.role !== 'admin') return sendJson(res, 401, { message: 'Akses ditolak.' });
@@ -323,5 +336,9 @@ export default requestHandler;
 
 if (!process.env.VERCEL) {
   const server = http.createServer(requestHandler);
-  server.listen(port, () => { console.log(`AndriCode berjalan di http://localhost:${port}`); console.log(`Database mode: ${db.mode} (${db.label})`); });
+  server.listen(port, () => { 
+    console.log(`🚀 AndriCode berjalan di http://localhost:${port}`); 
+    console.log(`🗄️  Database mode: ${db.mode} (${db.label})`);
+    if (!process.env.HCAPTCHA_SECRET_KEY) console.log('⚠️ HCAPTCHA_SECRET_KEY belum diset. Login bypass aktif (mode dev).');
+  });
 }
