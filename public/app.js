@@ -150,41 +150,29 @@ applySiteSettings();
 // ═══════════════════════════════════════════
 
 export function initCardScrollAnimation() {
+  // Hanya observe card yang sudah ada di DOM saat ini
+  // Card yang dirender dinamis harus pakai reobserveCards()
   const cardSelectors = '.snippet-card, .script-card, .feature-card, .stat-box';
-  
-  const observe = (root) => {
-    const cards = (root || document).querySelectorAll(cardSelectors);
-    if (!cards.length) return;
+  const cards = document.querySelectorAll(cardSelectors);
+  if (!cards.length) return;
 
-    const observer = new IntersectionObserver((entries) => {
-      entries.forEach(entry => {
-        if (entry.isIntersecting) {
-          entry.target.classList.add('card-visible');
-          observer.unobserve(entry.target);
-        }
-      });
-    }, {
-      threshold: 0.08,
-      rootMargin: '0px 0px -40px 0px'
-    });
-
-    cards.forEach(card => {
-      // Jika sudah di viewport saat load
-      const rect = card.getBoundingClientRect();
-      if (rect.top < window.innerHeight && rect.bottom > 0) {
-        // Delay kecil biar kerasa animasinya
-        setTimeout(() => card.classList.add('card-visible'), 100);
-      } else {
-        observer.observe(card);
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        entry.target.classList.add('card-visible');
+        observer.unobserve(entry.target);
       }
     });
-  };
+  }, { threshold: 0.08, rootMargin: '0px 0px -30px 0px' });
 
-  // Observe initial cards
-  observe();
-
-  // Re-observe saat konten baru dimuat (misal infinite scroll)
-  return observe;
+  cards.forEach((card, i) => {
+    const rect = card.getBoundingClientRect();
+    if (rect.top < window.innerHeight && rect.bottom > 0) {
+      setTimeout(() => card.classList.add('card-visible'), i * 70);
+    } else {
+      observer.observe(card);
+    }
+  });
 }
 
 // ── 3D Mouse Tilt Effect untuk snippet cards ──
@@ -222,6 +210,28 @@ export function showError(container, message = 'Gagal memuat data.') { if (!cont
 
 // Re-observe new cards (call after dynamic content renders)
 export function reobserveCards(container) {
-  const obs = initCardScrollAnimation();
-  if (typeof obs === 'function') obs(container);
+  const cardSelectors = '.snippet-card, .script-card, .feature-card, .stat-box';
+  const cards = container ? container.querySelectorAll(cardSelectors) : document.querySelectorAll(cardSelectors);
+  if (!cards.length) return;
+
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        entry.target.classList.add('card-visible');
+        observer.unobserve(entry.target);
+      }
+    });
+  }, { threshold: 0.08, rootMargin: '0px 0px -30px 0px' });
+
+  cards.forEach((card, i) => {
+    // Reset visibility state dulu
+    card.classList.remove('card-visible');
+    const rect = card.getBoundingClientRect();
+    if (rect.top < window.innerHeight && rect.bottom > 0) {
+      // Sudah dalam viewport — delay stagger kecil
+      setTimeout(() => card.classList.add('card-visible'), i * 80);
+    } else {
+      observer.observe(card);
+    }
+  });
 }
