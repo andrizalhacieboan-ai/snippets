@@ -1,4 +1,4 @@
-import { api, showToast, formData, escapeHtml, initTopbar, requireAuth, showSkeleton, showEmpty, applySiteSettings } from '/app.js';
+import { api, showToast, formData, escapeHtml, initTopbar, requireAuth, showSkeleton, showEmpty, applySiteSettings, applyThemeWithSlide, reobserveCards } from '/app.js';
 
 const adminForm = document.querySelector('#adminForm');
 const statsGrid = document.querySelector('#statsGrid');
@@ -104,6 +104,7 @@ async function loadDashboard() {
       <div class="stat-box glass-panel"><strong>${data.totals.views}</strong><span>Views</span></div>
       <div class="stat-box glass-panel"><strong>${data.totals.copies}</strong><span>Salin</span></div>
     `;
+    reobserveCards(statsGrid);
   } catch (error) { showToast('Gagal memuat stats.'); }
 }
 
@@ -184,36 +185,32 @@ editSnippetForm.addEventListener('submit', async (e) => {
 // ── Settings Logic ──
 function initSettingsUI() {
   const savedTheme = localStorage.getItem('ac-theme') || 'dark';
-  const savedFont = localStorage.getItem('ac-font') || "'Inter', sans-serif";
-  const savedSize = localStorage.getItem('ac-fontSize') || '16';
+  const savedFont  = localStorage.getItem('ac-font')  || "'Inter', sans-serif";
+  const savedSize  = localStorage.getItem('ac-fontSize') || '16';
 
-  // Sinkronisasi status tombol aktif saat inisialisasi pertama kali
   themeBtns.forEach(btn => {
-    if (btn.dataset.theme === savedTheme) {
-      btn.classList.add('active');
-    } else {
-      btn.classList.remove('active');
-    }
+    if (btn.dataset.theme === savedTheme) btn.classList.add('active');
+    else btn.classList.remove('active');
   });
-
   fontSelect.value = savedFont;
   fontSizeRange.value = savedSize;
   fontSizeLabel.textContent = `${savedSize}px`;
 
-  // Mendaftarkan event listener klik untuk semua tombol tema, termasuk tombol tema "spaace" baru
+  // ── Theme buttons with sliding animation ──
   themeBtns.forEach(btn => {
     btn.addEventListener('click', () => {
-      const themeName = btn.dataset.theme;
-      localStorage.setItem('ac-theme', themeName);
-      
-      // Menerapkan gaya tema secara instan di sisi client
-      applySiteSettings();
-      
-      // Update status class visual aktif pada tombol
-      themeBtns.forEach(b => b.classList.remove('active'));
-      btn.classList.add('active');
-      
-      showToast(`Tema diubah ke ${themeName.toUpperCase()}`);
+      const targetTheme = btn.dataset.theme;
+      const currentTheme = localStorage.getItem('ac-theme') || 'dark';
+      if (targetTheme === currentTheme) return;
+
+      // Start slide animation, apply theme at midpoint
+      applyThemeWithSlide(targetTheme, () => {
+        localStorage.setItem('ac-theme', targetTheme);
+        applySiteSettings();
+        themeBtns.forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        showToast(`Tema "${targetTheme}" aktif ✨`);
+      });
     });
   });
 
@@ -221,7 +218,6 @@ function initSettingsUI() {
     localStorage.setItem('ac-font', e.target.value);
     applySiteSettings();
   });
-
   fontSizeRange.addEventListener('input', (e) => {
     const size = e.target.value;
     localStorage.setItem('ac-fontSize', size);
