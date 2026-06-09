@@ -34,13 +34,13 @@ body {
   padding-bottom: env(safe-area-inset-bottom);
 }
 
-/* Custom Scrollbar */
+/* Penyesuaian Bar Skrol */
 ::-webkit-scrollbar { width: 6px; height: 6px; }
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 10px; }
 ::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.2); }
 
-/* ─── Grid Glow Background ─── */
+/* ─── Latar Belakang Grid Glow ─── */
 .grid-glow {
   position: fixed; inset: 0; z-index: -1; pointer-events: none;
   background-image: linear-gradient(rgba(255,255,255,0.02) 1px, transparent 1px),
@@ -59,7 +59,7 @@ body {
   filter: blur(80px); z-index: -1;
 }
 
-/* ─── Typography ─── */
+/* ─── Tipografi ─── */
 h1, h2, h3 { letter-spacing: -0.03em; line-height: 1.15; color: var(--text); }
 h1 { font-size: clamp(1.75rem, 5vw, 3rem); font-weight: 800; }
 h2 { font-size: clamp(1.25rem, 3vw, 1.75rem); font-weight: 700; }
@@ -71,7 +71,7 @@ p { line-height: 1.6; }
 .accent { color: var(--primary-2); }
 .hidden { display: none !important; }
 
-/* ─── Layout Components ─── */
+/* ─── Komponen Tata Letak ─── */
 .glass-panel {
   background: var(--panel);
   backdrop-filter: blur(var(--blur)); -webkit-backdrop-filter: blur(var(--blur));
@@ -85,7 +85,7 @@ main { width: min(1100px, calc(100% - 2rem)); margin: 0 auto; padding: 1.5rem 0 
 .section-heading { margin-bottom: 1.25rem; }
 .bottom-spacer { height: calc(var(--bottom-nav-h) + env(safe-area-inset-bottom) + 1.5rem); }
 
-/* ─── Topbar ─── */
+/* ─── Bar Navigasi Atas ─── */
 .topbar {
   position: sticky; top: 0; z-index: 100;
   display: flex; align-items: center; justify-content: space-between; gap: 1rem;
@@ -115,7 +115,7 @@ main { width: min(1100px, calc(100% - 2rem)); margin: 0 auto; padding: 1.5rem 0 
 .btn-logout { border: 1px solid var(--border); background: transparent; color: var(--muted); font: inherit; font-size: 0.78rem; font-weight: 700; padding: 0.35rem 0.75rem; border-radius: var(--radius-sm); cursor: pointer; transition: all 0.2s; }
 .btn-logout:hover { border-color: var(--danger); color: var(--danger); background: rgba(239,68,68,0.1); }
 
-/* ─── Bottom Navigation (Mobile) ─── */
+/* ─── Navigasi Bawah (Sisi Seluler) ─── */
 .bottom-nav {
   position: fixed; bottom: 0; left: 0; right: 0; z-index: 100;
   display: flex; justify-content: space-around; align-items: center;
@@ -132,7 +132,7 @@ main { width: min(1100px, calc(100% - 2rem)); margin: 0 auto; padding: 1.5rem 0 
 .bottom-nav-item.active { color: var(--primary-2); background: rgba(6, 182, 212, 0.1); }
 .bottom-nav-item:active svg { transform: scale(0.9); }
 
-/* ─── Buttons ─── */
+/* ─── Butang / Tombol ─── */
 .btn {
   display: inline-flex; align-items: center; justify-content: center; gap: 0.5rem;
   border: 0; border-radius: var(--radius-sm); padding: 0 1.25rem; height: var(--touch-min);
@@ -152,7 +152,7 @@ main { width: min(1100px, calc(100% - 2rem)); margin: 0 auto; padding: 1.5rem 0 
 .btn-icon { border: 0; background: transparent; color: var(--muted); cursor: pointer; padding: 0.25rem; display: grid; place-items: center; transition: color 0.2s; }
 .btn-icon:hover { color: var(--primary-2); }
 
-/* ─── Form Elements ─── */
+/* ─── Elemen Borang / Form ─── */
 .form-grid { display: grid; gap: 1rem; }
 .form-field { display: grid; gap: 0.4rem; }
 .form-field label { color: var(--muted); font-weight: 600; font-size: 0.82rem; letter-spacing: 0.02em; }
@@ -168,7 +168,7 @@ textarea { min-height: auto; resize: vertical; }
 .code-input { font-family: 'JetBrains Mono', monospace; font-size: 14px; line-height: 1.6; }
 .two-col { display: grid; grid-template-columns: 1fr; gap: 1rem; }
 
-/* ─── Cards ─── */
+/* ─── Kad / Panel ─── */
 .panel { padding: 1.5rem; margin-top: 1.5rem; }
 .snippet-list { display: grid; grid-template-columns: 1fr; gap: 0.75rem; }
 
@@ -187,11 +187,11 @@ textarea { min-height: auto; resize: vertical; }
 .card-actions { display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; flex-wrap: wrap; }
 .stats { color: var(--muted); font-weight: 600; font-size: 0.82rem; }
 
-/* ─── Auth Gate ─── */
+/* ─── Gerbang Autentikasi ─── */
 .auth-gate { display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; gap: 1rem; padding: 4rem 1.5rem; min-height: 50vh; }
 .auth-gate svg { width: 56px; height: 56px; color: var(--muted); opacity: 0.5; }
 
-/* ─── Login Page ─── */
+/* ─── Halaman Log Masuk ─── */
 .login-container { display: flex; align-items: center; justify-content: center; min-height: calc(100dvh - 160px); padding: 1rem 0; }
 .login-card { width: min(400px, 100%); padding: 2rem 1.5rem; }
 .login-brand { display: flex; flex-direction: column; align-items: center; gap: 0.75rem; margin-bottom: 2rem; text-align: center; }
@@ -202,7 +202,7 @@ textarea { min-height: auto; resize: vertical; }
 .login-tab { flex: 1; border: 0; background: transparent; color: var(--muted); font: inherit; font-weight: 700; font-size: 0.88rem; padding: 0.65rem; border-radius: 8px; cursor: pointer; transition: all 0.2s; }
 .login-tab.active { background: var(--panel-hover); color: var(--text); box-shadow: 0 2px 8px rgba(0,0,0,0.2); }
 
-/* ─── Profile Page ─── */
+/* ─── Halaman Profil ─── */
 .profile-header-card { display: flex; align-items: center; gap: 1.25rem; padding: 1.5rem; margin-bottom: 0.75rem; }
 .profile-avatar-wrapper { position: relative; flex-shrink: 0; cursor: pointer; }
 .profile-avatar-img { width: 72px; height: 72px; border-radius: 20px; object-fit: cover; border: 2px solid var(--border); background: var(--bg); }
@@ -222,7 +222,7 @@ textarea { min-height: auto; resize: vertical; }
 .stat-btn strong { font-size: 1.5rem; letter-spacing: -0.03em; }
 .stat-btn span { font-size: 0.7rem; color: var(--muted); font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; margin-top: 0.2rem; }
 
-/* ─── Dashboard ─── */
+/* ─── Dashboard Pengendali ─── */
 .stats-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 0.65rem; margin-bottom: 1.5rem; }
 .stat-box { padding: 1rem; border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--panel); text-align: center; }
 .stat-box strong { display: block; font-size: 1.6rem; letter-spacing: -0.03em; }
@@ -232,7 +232,7 @@ textarea { min-height: auto; resize: vertical; }
 .admin-row + .admin-row { margin-top: 0.5rem; }
 .admin-list { display: grid; gap: 0.5rem; }
 
-/* ─── Snippet Detail Page ─── */
+/* ─── Halaman Butiran Snippet ─── */
 .snippet-detail-header { padding: 2rem 0 1rem; }
 .snippet-detail-code { padding: 0; overflow: hidden; background: rgba(0,0,0,0.5) !important; }
 .snippet-detail-code pre { margin: 0; padding: 1.25rem; overflow-x: auto; font-family: 'JetBrains Mono', monospace; font-size: 0.85rem; line-height: 1.7; color: #d8fff8; -webkit-overflow-scrolling: touch; }
@@ -250,7 +250,7 @@ textarea { min-height: auto; resize: vertical; }
 .comment-meta span { color: var(--muted); font-size: 0.75rem; }
 .comment-body p { margin: 0; font-size: 0.92rem; line-height: 1.5; color: #e0dff5; word-break: break-word; }
 
-/* ─── Toast ─── */
+/* ─── Komponen Amaran / Toast ─── */
 .toast {
   position: fixed; left: 1rem; right: 1rem; bottom: calc(var(--bottom-nav-h) + 12px + env(safe-area-inset-bottom));
   max-width: 400px; margin: 0 auto; padding: 0.9rem 1.2rem; border: 1px solid var(--border);
@@ -260,7 +260,7 @@ textarea { min-height: auto; resize: vertical; }
 }
 .toast.show { opacity: 1; transform: translateY(0); pointer-events: auto; }
 
-/* ── Features & Footer (Home) ── */
+/* ── Ciri & Pengaki Halaman Utama ── */
 .about-section { padding: 2.5rem 0; }
 .features-grid { display: grid; grid-template-columns: 1fr; gap: 0.75rem; }
 .feature-card { padding: 1.5rem; text-align: center; }
@@ -286,7 +286,7 @@ textarea { min-height: auto; resize: vertical; }
 @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
 .spinner { animation: spin 0.8s linear infinite; }
 
-/* ─── Responsive ─── */
+/* ─── Responsif Breakpoints ─── */
 @media (min-width: 520px) {
   .two-col { grid-template-columns: 1fr 1fr; }
   .snippet-list { grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); }
@@ -334,7 +334,7 @@ textarea { min-height: auto; resize: vertical; }
 .tab-content { animation: fadeIn 0.2s ease; }
 @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
 
-/* Modal */
+/* Modals */
 .modal-overlay {
   position: fixed; inset: 0; z-index: 1000; background: rgba(0,0,0,0.7); backdrop-filter: blur(8px);
   display: grid; place-items: center; padding: 1rem; transition: opacity 0.2s;
@@ -343,7 +343,7 @@ textarea { min-height: auto; resize: vertical; }
 .modal-content { width: min(500px, 100%); max-height: 90vh; overflow-y: auto; padding: 2rem; border-radius: var(--radius); }
 .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; }
 
-/* Settings */
+/* Setelan / Settings */
 .settings-grid { display: grid; gap: 1rem; }
 .setting-card { padding: 1.5rem; }
 .setting-card h3 { margin-bottom: 1rem; font-size: 1rem; }
@@ -509,7 +509,7 @@ select.input-field { appearance: none; background-image: url("data:image/svg+xml
 }
 
 /* ═══════════════════════════════════════════════════════
-   NEUMORPHISM THEME (putih abu² & hitam)
+   TEMA NEUMORPHISM (Putih Abu-abu & Hitam)
    Diaktifkan hanya oleh admin via data-theme="neumorphism"
    ═══════════════════════════════════════════════════════ */
 
@@ -533,13 +533,13 @@ select.input-field { appearance: none; background-image: url("data:image/svg+xml
   color-scheme: light;
 }
 
-/* ── Neumorphism Body ── */
+/* ── Neumorphism Badan Utama (Body) ── */
 [data-theme="neumorphism"] body {
   background: var(--bg);
   color: var(--text);
 }
 
-/* ── Scrollbar ── */
+/* ── Bar Skrol Neumorphism ── */
 [data-theme="neumorphism"] ::-webkit-scrollbar-thumb {
   background: rgba(100,110,130,0.25);
 }
@@ -547,7 +547,7 @@ select.input-field { appearance: none; background-image: url("data:image/svg+xml
   background: rgba(100,110,130,0.4);
 }
 
-/* ── Grid Glow override ── */
+/* ── Grid Glow Overrides ── */
 [data-theme="neumorphism"] .grid-glow {
   background-image: none;
 }
@@ -572,7 +572,7 @@ select.input-field { appearance: none; background-image: url("data:image/svg+xml
   border-color: transparent;
 }
 
-/* ── Topbar ── */
+/* ── Navigasi Atas (Topbar) ── */
 [data-theme="neumorphism"] .topbar {
   background: rgba(224, 229, 236, 0.92);
   border-bottom: none;
@@ -584,7 +584,7 @@ select.input-field { appearance: none; background-image: url("data:image/svg+xml
   box-shadow: 3px 3px 8px rgba(163,177,198,0.5), -2px -2px 6px rgba(255,255,255,0.7);
 }
 
-/* ── Bottom Nav ── */
+/* ── Navigasi Bawah ── */
 [data-theme="neumorphism"] .bottom-nav {
   background: rgba(224, 229, 236, 0.95);
   border-top: none;
@@ -596,7 +596,7 @@ select.input-field { appearance: none; background-image: url("data:image/svg+xml
   color: var(--primary);
 }
 
-/* ── Buttons ── */
+/* ── Butang / Tombol ── */
 [data-theme="neumorphism"] .btn {
   box-shadow: var(--nm-shadow);
   border: none;
@@ -633,7 +633,7 @@ select.input-field { appearance: none; background-image: url("data:image/svg+xml
   box-shadow: 3px 3px 8px rgba(163,177,198,0.5), -2px -2px 6px rgba(255,255,255,0.7);
 }
 
-/* ── Inputs ── */
+/* ── Elemen Input & Borang ── */
 [data-theme="neumorphism"] input,
 [data-theme="neumorphism"] textarea {
   background: var(--bg);
@@ -646,8 +646,12 @@ select.input-field { appearance: none; background-image: url("data:image/svg+xml
   box-shadow: var(--nm-shadow-inset), 0 0 0 2px rgba(99,102,241,0.2);
   background: var(--bg);
 }
+[data-theme="neumorphism"] input::placeholder,
+[data-theme="neumorphism"] textarea::placeholder {
+  color: #9ca3af;
+}
 
-/* ── Cards ── */
+/* ── Kad-Kad Kontainer ── */
 [data-theme="neumorphism"] .snippet-card,
 [data-theme="neumorphism"] .stat-box,
 [data-theme="neumorphism"] .stat-btn,
@@ -668,7 +672,7 @@ select.input-field { appearance: none; background-image: url("data:image/svg+xml
   border: none;
 }
 
-/* ── Badge ── */
+/* ── Lencana (Badge) ── */
 [data-theme="neumorphism"] .badge {
   background: var(--bg);
   border: none;
@@ -676,7 +680,7 @@ select.input-field { appearance: none; background-image: url("data:image/svg+xml
   color: var(--primary);
 }
 
-/* ── Toast ── */
+/* ── Komponen Amaran / Toast ── */
 [data-theme="neumorphism"] .toast {
   background: var(--bg);
   border: none;
@@ -684,7 +688,7 @@ select.input-field { appearance: none; background-image: url("data:image/svg+xml
   color: var(--text);
 }
 
-/* ── Login Card ── */
+/* ── Kotak Pilihan Tab Log Masuk ── */
 [data-theme="neumorphism"] .login-tab {
   background: transparent;
   color: var(--muted);
@@ -700,7 +704,7 @@ select.input-field { appearance: none; background-image: url("data:image/svg+xml
   box-shadow: var(--nm-shadow-inset);
 }
 
-/* ── Admin Tabs ── */
+/* ── Tab Admin ── */
 [data-theme="neumorphism"] .admin-tabs {
   background: var(--bg);
   border: none;
@@ -715,7 +719,7 @@ select.input-field { appearance: none; background-image: url("data:image/svg+xml
   color: var(--text);
 }
 
-/* ── Select ── */
+/* ── Elemen Pilihan (Select Input) ── */
 [data-theme="neumorphism"] .input-field,
 [data-theme="neumorphism"] select.input-field {
   background: var(--bg);
@@ -734,7 +738,7 @@ select.input-field { appearance: none; background-image: url("data:image/svg+xml
   box-shadow: 2px 2px 5px rgba(163,177,198,0.5), -1px -1px 3px rgba(255,255,255,0.7);
 }
 
-/* ── Modal ── */
+/* ── Modal Setelan ── */
 [data-theme="neumorphism"] .modal-overlay {
   background: rgba(200, 205, 215, 0.6);
   backdrop-filter: blur(10px);
@@ -745,7 +749,7 @@ select.input-field { appearance: none; background-image: url("data:image/svg+xml
   box-shadow: 12px 12px 36px rgba(163,177,198,0.7), -10px -10px 30px rgba(255,255,255,0.9);
 }
 
-/* ── Snippet Code Block ── */
+/* ── Blok Kod Snippet ── */
 [data-theme="neumorphism"] .snippet-detail-code {
   background: #1a1f2e !important;
   box-shadow: var(--nm-shadow-inset);
@@ -754,14 +758,17 @@ select.input-field { appearance: none; background-image: url("data:image/svg+xml
   color: #d8fff8;
 }
 
-/* ── Comment ── */
+/* ── Kontainer Komen & Paragraf (FIXED CONTRAST BUG) ── */
 [data-theme="neumorphism"] .comment-body {
   background: var(--bg);
   border: none;
   box-shadow: var(--nm-shadow);
 }
+[data-theme="neumorphism"] .comment-body p {
+  color: var(--text) !important; /* Memastikan tulisan komentar terlihat gelap tajam */
+}
 
-/* ── Footer ── */
+/* ── Pengaki (Footer) ── */
 [data-theme="neumorphism"] .site-footer {
   background: var(--bg);
   border-top: none;
@@ -771,7 +778,7 @@ select.input-field { appearance: none; background-image: url("data:image/svg+xml
   border-top-color: rgba(163,177,198,0.3);
 }
 
-/* ── Announcement ── */
+/* ── Pengumuman (Announcement Card) ── */
 [data-theme="neumorphism"] .announcement-card {
   background: var(--bg);
   border: none;
@@ -779,7 +786,7 @@ select.input-field { appearance: none; background-image: url("data:image/svg+xml
   box-shadow: var(--nm-shadow);
 }
 
-/* ── Text colors ── */
+/* ── Penyelarasan Warna Teks Neumorphism ── */
 [data-theme="neumorphism"] h1,
 [data-theme="neumorphism"] h2,
 [data-theme="neumorphism"] h3 {
@@ -810,17 +817,17 @@ select.input-field { appearance: none; background-image: url("data:image/svg+xml
   color: var(--primary);
 }
 
-/* ── Profile Avatar ── */
+/* ── Avatar Pengguna ── */
 [data-theme="neumorphism"] .auth-avatar {
   box-shadow: 2px 2px 6px rgba(163,177,198,0.5), -1px -1px 4px rgba(255,255,255,0.7);
   border: none;
 }
 
 /* ═══════════════════════════════════════════════════════
-   THEME TRANSITION (SLIDING ANIMATION)
+   PERALIHAN TEMA (TRANSITION SLIDING ANIMATION)
    ═══════════════════════════════════════════════════════ */
 
-/* Theme slide overlay */
+/* Overlay Slaid Tema */
 .theme-slide-overlay {
   position: fixed;
   inset: 0;
@@ -830,7 +837,7 @@ select.input-field { appearance: none; background-image: url("data:image/svg+xml
   opacity: 0;
 }
 
-/* Sliding curtain animation – kiri ke kanan */
+/* Animasi Tirai Geser dari Kiri ke Kanan */
 @keyframes slideThemeIn {
   0%   { transform: translateX(-100%); opacity: 1; }
   45%  { transform: translateX(0%); opacity: 1; }
@@ -842,11 +849,11 @@ select.input-field { appearance: none; background-image: url("data:image/svg+xml
   animation: slideThemeIn 0.75s cubic-bezier(0.77,0,0.175,1) forwards;
 }
 
-/* Neumorphism overlay look */
+/* Tampilan Overlay Neumorphism */
 .theme-slide-overlay.to-neumorphism {
   background: linear-gradient(135deg, #e0e5ec 60%, #c8cfd8 100%);
 }
-/* Dark overlay look */
+/* Tampilan Overlay Gelap */
 .theme-slide-overlay.to-dark,
 .theme-slide-overlay.to-ocean,
 .theme-slide-overlay.to-purple,
@@ -854,7 +861,7 @@ select.input-field { appearance: none; background-image: url("data:image/svg+xml
   background: linear-gradient(135deg, #050507 60%, #1a1a2e 100%);
 }
 
-/* ── Smooth CSS variable transition ── */
+/* ── Transisi Halus Variabel CSS ── */
 :root, [data-theme] {
   transition:
     background-color 0.4s ease,
@@ -879,10 +886,10 @@ select.input-field { appearance: none; background-image: url("data:image/svg+xml
 }
 
 /* ═══════════════════════════════════════════════════════
-   3D CARD SCROLL ANIMATION
+   ANIMASI TATAL KAD 3D (SCROLL ANIMATION)
    ═══════════════════════════════════════════════════════ */
 
-/* Cards akan mulai dalam keadaan tersembunyi dan terangkat */
+/* Kad akan mulai dalam keadaan tersembunyi */
 .snippet-card,
 .script-card,
 .feature-card,
@@ -897,7 +904,7 @@ select.input-field { appearance: none; background-image: url("data:image/svg+xml
     border-color 0.25s ease;
 }
 
-/* Saat card masuk viewport → animasi muncul */
+/* Saat kad masuk ke dalam viewport */
 .snippet-card.card-visible,
 .script-card.card-visible,
 .feature-card.card-visible,
@@ -906,13 +913,13 @@ select.input-field { appearance: none; background-image: url("data:image/svg+xml
   transform: perspective(900px) rotateX(0deg) translateY(0px) scale(1);
 }
 
-/* Hover 3D tilt effect */
+/* Efek kemiringan 3D saat disentuh (Hover Tilt) */
 .snippet-card:hover,
 .script-card:hover {
   transform: perspective(900px) rotateX(-3deg) rotateY(2deg) translateY(-6px) scale(1.01) !important;
 }
 
-/* Stagger delay untuk grid items */
+/* Stagger Delay Kisi Grid */
 .snippet-list .snippet-card:nth-child(1)  { --card-delay: 0ms; }
 .snippet-list .snippet-card:nth-child(2)  { --card-delay: 80ms; }
 .snippet-list .snippet-card:nth-child(3)  { --card-delay: 160ms; }
@@ -936,7 +943,7 @@ select.input-field { appearance: none; background-image: url("data:image/svg+xml
 .stats-grid .stat-box:nth-child(3)  { --card-delay: 140ms; }
 .stats-grid .stat-box:nth-child(4)  { --card-delay: 210ms; }
 
-/* ── Neumorphism theme btn di settings ── */
+/* ── Butang Pilihan Tema Neumorphism di Setelan ── */
 .theme-btn[data-theme="neumorphism"] {
   background: #e0e5ec;
   color: #1a1f2e;
@@ -948,7 +955,7 @@ select.input-field { appearance: none; background-image: url("data:image/svg+xml
   box-shadow: 3px 3px 10px rgba(99,102,241,0.4), -2px -2px 6px rgba(255,255,255,0.8);
 }
 
-/* ── Reduced motion override ── */
+/* ── Pengabaian Untuk Pengurangan Animasi Sistem ── */
 @media (prefers-reduced-motion: reduce) {
   .snippet-card,
   .script-card,
