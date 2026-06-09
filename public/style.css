@@ -507,130 +507,458 @@ select.input-field { appearance: none; background-image: url("data:image/svg+xml
 @media (min-width: 768px) {
   .script-grid { grid-template-columns: repeat(3, 1fr); }
 }
-/* ═══════════════════════════════════════
-   SPAACE GAMIFIED THEME (Cinematic/Gamified)
-   ═══════════════════════════════════════ */
-[data-theme="spaace"] {
-  --bg: oklch(0.08 0 0);
-  --panel: oklch(0.12 0 0);
-  --panel-strong: oklch(0.15 0 0);
-  --line: oklch(0.2 0 0);
-  --text: oklch(0.98 0 0);
-  --muted: oklch(0.55 0 0);
-  --primary: oklch(0.75 0.15 85); /* Warm Gold Glow */
-  --primary-2: oklch(0.75 0.15 85); /* Warm Gold Glow */
-  --danger: oklch(0.65 0.2 25);
-  --success: oklch(0.75 0.15 85);
-  --shadow: 0 24px 80px oklch(0 0 0 / 0.6);
-  color-scheme: dark;
+
+/* ═══════════════════════════════════════════════════════
+   NEUMORPHISM THEME (putih abu² & hitam)
+   Diaktifkan hanya oleh admin via data-theme="neumorphism"
+   ═══════════════════════════════════════════════════════ */
+
+[data-theme="neumorphism"] {
+  --bg: #e0e5ec;
+  --panel: rgba(224, 229, 236, 0.95);
+  --panel-hover: rgba(210, 216, 224, 0.98);
+  --panel-strong: rgba(200, 206, 215, 0.98);
+  --border: rgba(160, 170, 185, 0.3);
+  --border-hover: rgba(120, 130, 150, 0.5);
+  --text: #1a1f2e;
+  --muted: #6b7280;
+  --primary: #6366f1;
+  --primary-2: #0ea5e9;
+  --danger: #ef4444;
+  --shadow: 6px 6px 18px rgba(163,177,198,0.6), -6px -6px 18px rgba(255,255,255,0.8);
+  --nm-shadow: 6px 6px 18px rgba(163,177,198,0.6), -6px -6px 18px rgba(255,255,255,0.8);
+  --nm-shadow-inset: inset 4px 4px 10px rgba(163,177,198,0.5), inset -4px -4px 10px rgba(255,255,255,0.7);
+  --nm-shadow-hover: 8px 8px 24px rgba(163,177,198,0.7), -8px -8px 24px rgba(255,255,255,0.9);
+  --nm-pressed: inset 3px 3px 8px rgba(163,177,198,0.6), inset -3px -3px 8px rgba(255,255,255,0.8);
+  color-scheme: light;
 }
 
-/* Spaace Typography Overrides */
-[data-theme="spaace"] h1, [data-theme="spaace"] h2, [data-theme="spaace"] h3 {
-  font-family: 'Instrument Serif', serif;
-  letter-spacing: -0.02em;
-}
-[data-theme="spaace"] body {
-  font-family: 'DM Sans', system-ui, sans-serif;
-}
-[data-theme="spaace"] .eyebrow {
-  font-family: 'JetBrains Mono', monospace;
-  letter-spacing: 0.1em;
+/* ── Neumorphism Body ── */
+[data-theme="neumorphism"] body {
+  background: var(--bg);
+  color: var(--text);
 }
 
-/* Spaace Game-Style Nav Tweaks */
-[data-theme="spaace"] .bottom-nav-item svg {
-  stroke-width: 1.5;
-  filter: drop-shadow(0 0 4px oklch(0.75 0.15 85 / 0.3));
+/* ── Scrollbar ── */
+[data-theme="neumorphism"] ::-webkit-scrollbar-thumb {
+  background: rgba(100,110,130,0.25);
 }
-[data-theme="spaace"] .bottom-nav-item.active {
-  color: oklch(0.75 0.15 85);
-  background: oklch(0.75 0.15 85 / 0.1);
+[data-theme="neumorphism"] ::-webkit-scrollbar-thumb:hover {
+  background: rgba(100,110,130,0.4);
 }
 
-/* ─── Deck Cards UI ─── */
-.deck-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
-  gap: 1rem;
-  margin-top: 1.5rem;
+/* ── Grid Glow override ── */
+[data-theme="neumorphism"] .grid-glow {
+  background-image: none;
+}
+[data-theme="neumorphism"] .grid-glow::before {
+  background: radial-gradient(circle, rgba(99,102,241,0.08), transparent 60%);
+}
+[data-theme="neumorphism"] .grid-glow::after {
+  background: radial-gradient(circle, rgba(14,165,233,0.06), transparent 60%);
 }
 
-.deck-card {
-  aspect-ratio: 3 / 4;
-  perspective: 1000px;
-  cursor: pointer;
+/* ── Glass Panel → Neumorphism Panel ── */
+[data-theme="neumorphism"] .glass-panel {
+  background: var(--bg);
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  border: none;
+  box-shadow: var(--nm-shadow);
+  border-radius: var(--radius);
+}
+[data-theme="neumorphism"] .glass-panel:hover {
+  box-shadow: var(--nm-shadow-hover);
+  border-color: transparent;
 }
 
-.deck-card-inner {
-  position: relative;
-  width: 100%;
-  height: 100%;
-  text-align: center;
-  transition: transform 0.6s;
-  transform-style: preserve-3d;
-  border-radius: 14px;
-  box-shadow: 0 10px 30px oklch(0 0 0 / 0.4);
+/* ── Topbar ── */
+[data-theme="neumorphism"] .topbar {
+  background: rgba(224, 229, 236, 0.92);
+  border-bottom: none;
+  box-shadow: 0 4px 20px rgba(163,177,198,0.4);
+  backdrop-filter: blur(12px);
+}
+[data-theme="neumorphism"] .brand-mark {
+  background: linear-gradient(135deg, #6366f1, #0ea5e9);
+  box-shadow: 3px 3px 8px rgba(163,177,198,0.5), -2px -2px 6px rgba(255,255,255,0.7);
 }
 
-.deck-card:hover .deck-card-inner {
-  transform: rotateY(180deg);
+/* ── Bottom Nav ── */
+[data-theme="neumorphism"] .bottom-nav {
+  background: rgba(224, 229, 236, 0.95);
+  border-top: none;
+  box-shadow: 0 -4px 20px rgba(163,177,198,0.4);
+}
+[data-theme="neumorphism"] .bottom-nav-item.active {
+  background: var(--nm-shadow-inset);
+  box-shadow: var(--nm-shadow-inset);
+  color: var(--primary);
 }
 
-.deck-card-front, .deck-card-back {
-  position: absolute;
-  width: 100%;
-  height: 100%;
-  -webkit-backface-visibility: hidden;
-  backface-visibility: hidden;
-  border-radius: 14px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: 1rem;
-  border: 1px solid oklch(0.2 0 0);
+/* ── Buttons ── */
+[data-theme="neumorphism"] .btn {
+  box-shadow: var(--nm-shadow);
+  border: none;
+}
+[data-theme="neumorphism"] .btn:hover {
+  box-shadow: var(--nm-shadow-hover);
+}
+[data-theme="neumorphism"] .btn:active {
+  box-shadow: var(--nm-pressed);
+  transform: scale(0.98);
+}
+[data-theme="neumorphism"] .btn.primary {
+  background: linear-gradient(145deg, #7678f0, #5558e8);
+  color: white;
+  box-shadow: 5px 5px 15px rgba(99,102,241,0.3), -3px -3px 10px rgba(255,255,255,0.6);
+}
+[data-theme="neumorphism"] .btn.primary:hover {
+  background: linear-gradient(145deg, #8183f1, #6365eb);
+  box-shadow: 7px 7px 20px rgba(99,102,241,0.4), -4px -4px 12px rgba(255,255,255,0.7);
+}
+[data-theme="neumorphism"] .btn.ghost {
+  background: var(--bg);
+  color: var(--text);
+}
+[data-theme="neumorphism"] .btn.danger {
+  background: var(--bg);
+  color: #ef4444;
+  box-shadow: var(--nm-shadow);
+  border: none;
+}
+[data-theme="neumorphism"] .btn-logout {
+  border: none;
+  background: var(--bg);
+  box-shadow: 3px 3px 8px rgba(163,177,198,0.5), -2px -2px 6px rgba(255,255,255,0.7);
 }
 
-.deck-card-front {
-  background: oklch(0.12 0 0);
-  color: oklch(0.98 0 0);
+/* ── Inputs ── */
+[data-theme="neumorphism"] input,
+[data-theme="neumorphism"] textarea {
+  background: var(--bg);
+  border: none;
+  box-shadow: var(--nm-shadow-inset);
+  color: var(--text);
+}
+[data-theme="neumorphism"] input:focus,
+[data-theme="neumorphism"] textarea:focus {
+  box-shadow: var(--nm-shadow-inset), 0 0 0 2px rgba(99,102,241,0.2);
+  background: var(--bg);
 }
 
-.deck-card-front.locked {
-  background: oklch(0.1 0 0);
-  border-style: dashed;
-  color: oklch(0.4 0 0);
+/* ── Cards ── */
+[data-theme="neumorphism"] .snippet-card,
+[data-theme="neumorphism"] .stat-box,
+[data-theme="neumorphism"] .stat-btn,
+[data-theme="neumorphism"] .admin-row,
+[data-theme="neumorphism"] .setting-card,
+[data-theme="neumorphism"] .feature-card,
+[data-theme="neumorphism"] .script-card {
+  background: var(--bg);
+  border: none;
+  box-shadow: var(--nm-shadow);
+}
+[data-theme="neumorphism"] .snippet-card:hover,
+[data-theme="neumorphism"] .stat-btn:hover,
+[data-theme="neumorphism"] .admin-row:hover,
+[data-theme="neumorphism"] .script-card:hover {
+  box-shadow: var(--nm-shadow-hover);
+  transform: translateY(-3px);
+  border: none;
 }
 
-.deck-card-back {
-  background: linear-gradient(135deg, oklch(0.15 0.05 85), oklch(0.12 0 0));
-  color: oklch(0.98 0 0);
-  transform: rotateY(180deg);
-  border-color: oklch(0.75 0.15 85);
+/* ── Badge ── */
+[data-theme="neumorphism"] .badge {
+  background: var(--bg);
+  border: none;
+  box-shadow: 2px 2px 5px rgba(163,177,198,0.5), -1px -1px 4px rgba(255,255,255,0.7);
+  color: var(--primary);
 }
 
-.deck-card-front svg, .deck-card-back svg {
-  width: 40px;
-  height: 40px;
-  margin-bottom: 0.5rem;
-  stroke: oklch(0.75 0.15 85);
+/* ── Toast ── */
+[data-theme="neumorphism"] .toast {
+  background: var(--bg);
+  border: none;
+  box-shadow: 8px 8px 24px rgba(163,177,198,0.6), -6px -6px 18px rgba(255,255,255,0.8);
+  color: var(--text);
 }
 
-.deck-counter {
-  margin-top: 1rem;
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 0.85rem;
-  color: oklch(0.55 0 0);
-  text-align: center;
+/* ── Login Card ── */
+[data-theme="neumorphism"] .login-tab {
+  background: transparent;
+  color: var(--muted);
 }
-.deck-counter strong { color: oklch(0.75 0.15 85); }
+[data-theme="neumorphism"] .login-tab.active {
+  background: var(--bg);
+  color: var(--text);
+  box-shadow: var(--nm-shadow-inset);
+}
+[data-theme="neumorphism"] .login-tabs {
+  background: var(--bg);
+  border: none;
+  box-shadow: var(--nm-shadow-inset);
+}
 
-/* ─── Spaace Theme Button ─── */
-.theme-btn[data-theme="spaace"] {
-  background: oklch(0.1 0 0);
-  border-color: oklch(0.75 0.15 85);
-  color: oklch(0.75 0.15 85);
-  font-weight: 800;
-  text-shadow: 0 0 10px oklch(0.75 0.15 85 / 0.5);
+/* ── Admin Tabs ── */
+[data-theme="neumorphism"] .admin-tabs {
+  background: var(--bg);
+  border: none;
+  box-shadow: var(--nm-shadow-inset);
+}
+[data-theme="neumorphism"] .admin-tab.active {
+  background: var(--bg);
+  color: var(--primary);
+  box-shadow: var(--nm-shadow);
+}
+[data-theme="neumorphism"] .admin-tab:hover:not(.active) {
+  color: var(--text);
+}
+
+/* ── Select ── */
+[data-theme="neumorphism"] .input-field,
+[data-theme="neumorphism"] select.input-field {
+  background: var(--bg);
+  border: none;
+  box-shadow: var(--nm-shadow-inset);
+  color: var(--text);
+}
+
+/* ── Range Slider ── */
+[data-theme="neumorphism"] .range-slider {
+  background: var(--bg);
+  box-shadow: var(--nm-shadow-inset);
+}
+[data-theme="neumorphism"] .range-slider::-webkit-slider-thumb {
+  border-color: var(--bg);
+  box-shadow: 2px 2px 5px rgba(163,177,198,0.5), -1px -1px 3px rgba(255,255,255,0.7);
+}
+
+/* ── Modal ── */
+[data-theme="neumorphism"] .modal-overlay {
+  background: rgba(200, 205, 215, 0.6);
+  backdrop-filter: blur(10px);
+}
+[data-theme="neumorphism"] .modal-content {
+  background: var(--bg);
+  border: none;
+  box-shadow: 12px 12px 36px rgba(163,177,198,0.7), -10px -10px 30px rgba(255,255,255,0.9);
+}
+
+/* ── Snippet Code Block ── */
+[data-theme="neumorphism"] .snippet-detail-code {
+  background: #1a1f2e !important;
+  box-shadow: var(--nm-shadow-inset);
+}
+[data-theme="neumorphism"] .snippet-detail-code pre {
+  color: #d8fff8;
+}
+
+/* ── Comment ── */
+[data-theme="neumorphism"] .comment-body {
+  background: var(--bg);
+  border: none;
+  box-shadow: var(--nm-shadow);
+}
+
+/* ── Footer ── */
+[data-theme="neumorphism"] .site-footer {
+  background: var(--bg);
+  border-top: none;
+  box-shadow: 0 -4px 20px rgba(163,177,198,0.4);
+}
+[data-theme="neumorphism"] .footer-bottom {
+  border-top-color: rgba(163,177,198,0.3);
+}
+
+/* ── Announcement ── */
+[data-theme="neumorphism"] .announcement-card {
+  background: var(--bg);
+  border: none;
+  border-left: 4px solid var(--primary-2);
+  box-shadow: var(--nm-shadow);
+}
+
+/* ── Text colors ── */
+[data-theme="neumorphism"] h1,
+[data-theme="neumorphism"] h2,
+[data-theme="neumorphism"] h3 {
+  color: #1a1f2e;
+}
+[data-theme="neumorphism"] .auth-name,
+[data-theme="neumorphism"] .snippet-link,
+[data-theme="neumorphism"] .brand {
+  color: #1a1f2e;
+}
+[data-theme="neumorphism"] .menu a {
+  color: #6b7280;
+}
+[data-theme="neumorphism"] .menu a:hover,
+[data-theme="neumorphism"] .menu a.active {
+  color: #1a1f2e;
+  background: rgba(163,177,198,0.3);
+}
+[data-theme="neumorphism"] .auth-link {
+  color: var(--muted);
+  border-color: rgba(163,177,198,0.5);
+  box-shadow: 2px 2px 6px rgba(163,177,198,0.4), -1px -1px 4px rgba(255,255,255,0.6);
+}
+[data-theme="neumorphism"] .btn-icon {
+  color: var(--muted);
+}
+[data-theme="neumorphism"] .btn-icon:hover {
+  color: var(--primary);
+}
+
+/* ── Profile Avatar ── */
+[data-theme="neumorphism"] .auth-avatar {
+  box-shadow: 2px 2px 6px rgba(163,177,198,0.5), -1px -1px 4px rgba(255,255,255,0.7);
+  border: none;
+}
+
+/* ═══════════════════════════════════════════════════════
+   THEME TRANSITION (SLIDING ANIMATION)
+   ═══════════════════════════════════════════════════════ */
+
+/* Theme slide overlay */
+.theme-slide-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  pointer-events: none;
+  transform: translateX(-100%);
+  opacity: 0;
+}
+
+/* Sliding curtain animation – kiri ke kanan */
+@keyframes slideThemeIn {
+  0%   { transform: translateX(-100%); opacity: 1; }
+  45%  { transform: translateX(0%); opacity: 1; }
+  55%  { transform: translateX(0%); opacity: 1; }
+  100% { transform: translateX(100%); opacity: 1; }
+}
+
+.theme-slide-overlay.animating {
+  animation: slideThemeIn 0.75s cubic-bezier(0.77,0,0.175,1) forwards;
+}
+
+/* Neumorphism overlay look */
+.theme-slide-overlay.to-neumorphism {
+  background: linear-gradient(135deg, #e0e5ec 60%, #c8cfd8 100%);
+}
+/* Dark overlay look */
+.theme-slide-overlay.to-dark,
+.theme-slide-overlay.to-ocean,
+.theme-slide-overlay.to-purple,
+.theme-slide-overlay.to-terminal {
+  background: linear-gradient(135deg, #050507 60%, #1a1a2e 100%);
+}
+
+/* ── Smooth CSS variable transition ── */
+:root, [data-theme] {
+  transition:
+    background-color 0.4s ease,
+    color 0.3s ease;
+}
+.glass-panel,
+.snippet-card,
+.stat-box,
+.stat-btn,
+.admin-row,
+.topbar,
+.bottom-nav,
+.toast,
+.btn,
+.badge {
+  transition:
+    background 0.35s ease,
+    box-shadow 0.35s ease,
+    border-color 0.25s ease,
+    color 0.25s ease,
+    transform 0.2s ease;
+}
+
+/* ═══════════════════════════════════════════════════════
+   3D CARD SCROLL ANIMATION
+   ═══════════════════════════════════════════════════════ */
+
+/* Cards akan mulai dalam keadaan tersembunyi dan terangkat */
+.snippet-card,
+.script-card,
+.feature-card,
+.stat-box {
+  --card-delay: 0ms;
+  opacity: 0;
+  transform: perspective(900px) rotateX(18deg) translateY(40px) scale(0.95);
+  transition:
+    opacity 0.55s ease var(--card-delay),
+    transform 0.55s cubic-bezier(0.22, 0.61, 0.36, 1) var(--card-delay),
+    box-shadow 0.35s ease,
+    border-color 0.25s ease;
+}
+
+/* Saat card masuk viewport → animasi muncul */
+.snippet-card.card-visible,
+.script-card.card-visible,
+.feature-card.card-visible,
+.stat-box.card-visible {
+  opacity: 1;
+  transform: perspective(900px) rotateX(0deg) translateY(0px) scale(1);
+}
+
+/* Hover 3D tilt effect */
+.snippet-card:hover,
+.script-card:hover {
+  transform: perspective(900px) rotateX(-3deg) rotateY(2deg) translateY(-6px) scale(1.01) !important;
+}
+
+/* Stagger delay untuk grid items */
+.snippet-list .snippet-card:nth-child(1)  { --card-delay: 0ms; }
+.snippet-list .snippet-card:nth-child(2)  { --card-delay: 80ms; }
+.snippet-list .snippet-card:nth-child(3)  { --card-delay: 160ms; }
+.snippet-list .snippet-card:nth-child(4)  { --card-delay: 240ms; }
+.snippet-list .snippet-card:nth-child(5)  { --card-delay: 320ms; }
+.snippet-list .snippet-card:nth-child(6)  { --card-delay: 400ms; }
+.snippet-list .snippet-card:nth-child(n+7) { --card-delay: 480ms; }
+
+.script-grid .script-card:nth-child(1)  { --card-delay: 0ms; }
+.script-grid .script-card:nth-child(2)  { --card-delay: 100ms; }
+.script-grid .script-card:nth-child(3)  { --card-delay: 200ms; }
+.script-grid .script-card:nth-child(n+4) { --card-delay: 300ms; }
+
+.features-grid .feature-card:nth-child(1)  { --card-delay: 0ms; }
+.features-grid .feature-card:nth-child(2)  { --card-delay: 120ms; }
+.features-grid .feature-card:nth-child(3)  { --card-delay: 240ms; }
+.features-grid .feature-card:nth-child(4)  { --card-delay: 360ms; }
+
+.stats-grid .stat-box:nth-child(1)  { --card-delay: 0ms; }
+.stats-grid .stat-box:nth-child(2)  { --card-delay: 70ms; }
+.stats-grid .stat-box:nth-child(3)  { --card-delay: 140ms; }
+.stats-grid .stat-box:nth-child(4)  { --card-delay: 210ms; }
+
+/* ── Neumorphism theme btn di settings ── */
+.theme-btn[data-theme="neumorphism"] {
+  background: #e0e5ec;
+  color: #1a1f2e;
+  box-shadow: 3px 3px 8px rgba(163,177,198,0.6), -2px -2px 6px rgba(255,255,255,0.8);
+  border-color: transparent;
+}
+.theme-btn[data-theme="neumorphism"].active {
+  border-color: #6366f1;
+  box-shadow: 3px 3px 10px rgba(99,102,241,0.4), -2px -2px 6px rgba(255,255,255,0.8);
+}
+
+/* ── Reduced motion override ── */
+@media (prefers-reduced-motion: reduce) {
+  .snippet-card,
+  .script-card,
+  .feature-card,
+  .stat-box {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+  .theme-slide-overlay.animating {
+    animation-duration: 0.01ms !important;
+  }
 }
