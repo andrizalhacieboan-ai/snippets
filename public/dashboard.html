@@ -8,7 +8,6 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600&family=Poppins:wght@400;600;700&family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
-  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,700;1,9..40,400&family=Instrument+Serif&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/style.css">
 </head>
 <body>
@@ -55,9 +54,6 @@
 
       <div id="tab-overview" class="tab-content">
         <div id="statsGrid" class="stats-grid"></div>
-        <div style="margin-top: 2rem; border-top: 1px solid var(--line); padding-top: 1.5rem;">
-          <h3 style="font-family: 'JetBrains Mono', monospace; letter-spacing: 0.05em;">Overview Statistics</h3>
-        </div>
       </div>
 
       <div id="tab-users" class="tab-content hidden">
@@ -70,11 +66,11 @@
         <div id="adminSnippets" class="admin-list"></div>
       </div>
 
-      <div id="tab-scripts-manager" class="tab-content hidden">
+         <div id="tab-scripts-manager" class="tab-content hidden">
         <div class="section-heading"><h2>Upload Script Anda</h2><p class="muted">Upload link download (Mediafire, dll) dan thumbnail.</p></div>
         <form id="scriptForm" class="form-grid glass-panel panel" style="margin-top:0;">
           <div class="form-field"><label>Judul Script</label><input id="scriptTitle" placeholder="Contoh: Script Auto Order" required></div>
-          <div class="form-field"><label>Kategori</label><input id="scriptCategory" placeholder="Contoh: Game, Tools, MD" required></div>
+          <div class="form-field"><label>Kategori</label><input id="scriptCategory" placeholder="Contoh: Game, Tools, MD"b required></div>
           <div class="form-field"><label>URL Gambar Thumbnail (Opsional)</label><input id="scriptImage" placeholder="https://i.ibb.co/image.png"></div>
           <div class="form-field"><label>URL Download</label><input id="scriptDownloadUrl" placeholder="https://www.mediafire.com/file/..." required></div>
           <div class="form-field"><label>Deskripsi</label><textarea id="scriptDesc" rows="3" required></textarea></div>
@@ -90,12 +86,13 @@
           <div class="setting-card glass-panel">
             <h3>Warna Tema</h3>
             <div class="theme-options">
-              <button class="theme-btn active" data-theme="dark" style="background: #050507; border-color: #8b5cf6;">Dark</button>
-              <button class="theme-btn" data-theme="ocean" style="background: #0b1120; border-color: #3b82f6;">Ocean</button>
-              <button class="theme-btn" data-theme="purple" style="background: #130a1e; border-color: #d946ef;">Purple</button>
-              <button class="theme-btn" data-theme="terminal" style="background: #020603; border-color: #22c55e;">Terminal</button>
-              <button class="theme-btn" data-theme="spaace" style="background: #141414; border-color: oklch(0.75 0.15 85); color: oklch(0.75 0.15 85); font-weight: bold;">Spaace</button>
+              <button class="theme-btn active" data-theme="dark" style="background: #050507; border-color: #8b5cf6; color:#fff;">Dark</button>
+              <button class="theme-btn" data-theme="ocean" style="background: #0b1120; border-color: #3b82f6; color:#fff;">Ocean</button>
+              <button class="theme-btn" data-theme="purple" style="background: #130a1e; border-color: #d946ef; color:#fff;">Purple</button>
+              <button class="theme-btn" data-theme="terminal" style="background: #020603; border-color: #22c55e; color:#fff;">Terminal</button>
+              <button class="theme-btn" data-theme="neumorphism" style="background: #e0e5ec; color:#1a1f2e;">Neumorph</button>
             </div>
+            <p class="muted" style="font-size:0.75rem; margin-top:0.75rem;">⚠️ Perubahan tema berlaku untuk semua pengguna.</p>
           </div>
           <div class="setting-card glass-panel">
             <h3>Jenis Font</h3>
@@ -147,7 +144,7 @@
   </div>
 
   <nav class="bottom-nav">
-    <a href="/" class="bottom-nav-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="9 22 9 12 15 12 15 22"/></svg><span>Home</span></a>
+    <a href="/" class="bottom-nav-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg><span>Home</span></a>
     <a href="/upload" class="bottom-nav-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg><span>Upload</span></a>
     <a href="/profile" class="bottom-nav-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg><span>Profil</span></a>
     <a href="/dashboard" class="bottom-nav-item active"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg><span>Admin</span></a>
